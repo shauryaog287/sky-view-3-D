@@ -90,10 +90,18 @@ export class GroundHeights {
     return this.ellipsoid ? 0 : undefined;
   }
 
+  /** True once the airport's ground has been measured on the current layer. */
+  isSampled(airport: Airport): boolean {
+    return this.ellipsoid || !!this.cache.get(airport.ident)?.sampled;
+  }
+
   private entry(airport: Airport): Entry {
     const key = airport.ident;
     let e = this.cache.get(key);
     if (e) return e;
+    // A hidden tileset (photoreal clipped to other airports, or not near any) cannot be sampled yet: estimate
+    // without caching, and measure once it is visible.
+    if (this.layer === 'google3d' && !this.tileset()?.show) return { groundM: airport.elevFt * FT_TO_M, sampled: false };
     e = { groundM: airport.elevFt * FT_TO_M, sampled: this.ellipsoid };
     this.cache.set(key, e);
     if (!this.ellipsoid) e.pending = this.sample(airport, e);

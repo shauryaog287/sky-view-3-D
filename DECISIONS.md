@@ -311,3 +311,24 @@ Short architecture decision records. Newest decisions are appended at the bottom
   hubs follow. The aircraft replica shopping list is in `docs/india-rollout.md`.
 - Operator-specific replicas: the manifest maps airline + type to a model (`liveries`), so licensed livery models
   are picked per flight from the callsign; flights without one keep the generated model of their exact type.
+
+## D-031 · Photoreal 3D only at airports; the city is a flat 2D map
+- Default "3D at airports only" (Settings → Where to show 3D → Airports only / Everywhere). Implemented in
+  `src/scene/photorealScope.ts`:
+  - Google Photorealistic 3D Tiles are clipped (`ClippingPolygonCollection`, inverse) to the outline of up to 6
+    airports within 90 km of the camera. The outline is the convex hull of the runways, with their ends, plus the
+    terminals, aprons, taxiways and jet bridges, grown by 350 m (`airportArea` in shared/airport3d.ts).
+  - Everywhere else the globe shows the Esri satellite imagery as a flat 2D map. It is laid on a flat custom terrain
+    at each airport's measured ground height (`shared/flatGround.ts`), so the 3D airport sits flush with the map
+    instead of floating above the ellipsoid (Indian airports are 10–1,600 m up).
+  - To hide the seam, the globe's hole is 90 m smaller than the 3D area and the flat map sits 3 m lower, so the
+    airport's edge always overlaps it. The ground height is measured on the visible 3D tiles, and the map is
+    re-levelled when it arrives.
+  - Away from airports (none within 90 km, or the camera above 120 km) the 3D tileset is hidden, so nothing is
+    streamed for city areas.
+  - WebGL 1 devices cannot clip: there the full 3D tiles show only while near an airport.
+- Without a Google key nothing changes: satellite 2D map plus OpenStreetMap 3D airport buildings (D-028), which is the
+  same "3D airport, 2D city" idea.
+- Test hook: in mock mode `?fake3d=1` loads a stand-in tileset (`tests/fixtures/fake3d`, built by
+  `scripts/build-fake-tileset.ts`) instead of Google's, so the clipping and flat-map paths can be checked without a
+  key. Verified visually from high and low angles.

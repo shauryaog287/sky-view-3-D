@@ -260,3 +260,59 @@ export function toLatLon(origin: [number, number], x: number, y: number): { lat:
   const dLon = (x / (6_371_008.8 * Math.cos((lat * Math.PI) / 180))) * (180 / Math.PI);
   return { lat: lat + dLat, lon: lon + dLon };
 }
+
+/**
+ * The airport's footprint as a convex outline (lat/lon ring): runways (with their approach ends), terminals, aprons,
+ * taxiways and jet bridges, grown by `bufferM`. Used to keep photorealistic 3D only at the airport.
+ */
+export function airportArea(
+  airport: { lat: number; lon: number; runways: { le: { lat: number; lon: number }; he: { lat: number; lon: number } }[] },
+  data?: Airport3D | null,
+  bufferM = 350,
+): { lat: number; lon: number }[] {
+  const origin: [number, number] = data?.origin ?? [airport.lat, airport.lon];
+  const pts: [number, number][] = [];
+  const addLocal = (x: number, y: number, r: number) => {
+    for (let k = 0; k < 12; k++) pts.push([x + Math.cos((k * Math.PI) / 6) * r, y + Math.sin((k * Math.PI) / 6) * r]);
+  };
+  for (const r of airport.runways) {
+    for (const e of [r.le, r.he]) {
+      const o = enuOffsetM(origin[0], origin[1], e.lat, e.lon);
+      addLocal(o.east, o.north, bufferM + 150);
+    }
+  }
+  if (data) {
+    const raw: [number, number][] = [];
+    const ring = (flat: number[]) => {
+      for (let i = 0; i + 1 < flat.length; i += 2) raw.push([flat[i], flat[i + 1]]);
+    };
+    for (const b of data.buildings) ring(b.ring);
+    for (const a of data.aprons) ring(a);
+    for (const t of data.taxiways) ring(t.line);
+    for (const b of data.bridges) ring(b.line);
+    for (const t of data.towers) raw.push([t.x, t.y]);
+    // Ignore stray features far from the runways (mis-tagged buildings in town).
+    for (const [x, y] of convexHull(raw)) if (Math.hypot(x, y) < 8000) addLocal(x, y, bufferM);
+  }
+  if (!pts.length) addLocal(0, 0, 2500);
+  return convexHull(pts).map(([x, y]) => toLatLon(origin, x, y));
+}
+
+/** Andrew's monotone chain; returns the hull counter-clockwise without repeating the first point. */
+export function convexHull(points: [number, number][]): [number, number][] {
+  const p = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  if (p.length < 3) return p;
+  const cross = (o: [number, number], a: [number, number], b: [number, number]) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lower: [number, number][] = [];
+  for (const q of p) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], q) <= 0) lower.pop();
+    lower.push(q);
+  }
+  const upper: [number, number][] = [];
+  for (let i = p.length - 1; i >= 0; i--) {
+    const q = p[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], q) <= 0) upper.pop();
+    upper.push(q);
+  }
+  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
+}

@@ -16,7 +16,8 @@ import { ReplayController } from './replay';
 import { AlertMonitor } from './alertMonitor';
 import { installDataCredits, trackCreditBarHeight } from './credits';
 import { QUALITY, type QualityLevel } from '../config/quality';
-import { photoreal, quality, showLabels, weatherOn } from '../state/settings';
+import { photoreal, photorealScope, quality, showLabels, weatherOn } from '../state/settings';
+import { PhotorealScope } from './photorealScope';
 import { env } from '../config/env';
 import { api } from '../api';
 import { baseLayerStatus, toast } from '../state/store';
@@ -45,6 +46,7 @@ export class SceneController {
   readonly phases: PhaseTracker;
   readonly airportsLayer: AirportLayer;
   readonly airport3d: Airport3DLayer;
+  readonly scope: PhotorealScope;
   readonly sky: SkyController;
   readonly replay: ReplayController;
   readonly alerts: AlertMonitor;
@@ -70,6 +72,7 @@ export class SceneController {
     this.phases = new PhaseTracker(aircraftStore, this.ground);
     this.airportsLayer = new AirportLayer(this.viewer);
     this.airport3d = new Airport3DLayer(this.viewer, this.ground);
+    this.scope = new PhotorealScope(this.viewer, this.baseLayers, this.ground, this.airport3d);
     this.feed = new LiveFeed(this.viewer);
     this.cameras = new CameraRig(this.viewer, this.aircraft);
     this.sky = new SkyController(this.viewer, this.baseLayers);
@@ -315,6 +318,7 @@ export class SceneController {
       this.phases.setAirports(a);
       this.airportsLayer.setAirports(a);
       this.airport3d.setAirports(a);
+      this.scope.setAirports(a);
     });
     this.weatherTimer = setInterval(() => {
       void this.weather.check(this.focusPoint(), weatherOn.value && canUseFeature('weather_effects'));
@@ -331,8 +335,12 @@ export class SceneController {
     this.photorealAttempted = wantPhotoreal;
     const session = wantPhotoreal ? await api.tilesSession().catch(() => undefined) : undefined;
     const ionToken = env.cesiumIonToken ?? session?.ionToken;
+    // Mock mode only: ?fake3d=1 stands in a local test tileset for Google's, to exercise the photoreal code paths.
+    const testTilesetUrl = env.apiMode === 'mock' && new URLSearchParams(location.search).has('fake3d') ? '/tests/fixtures/fake3d/tileset.json' : undefined;
+    this.disposers.push(effect(() => this.scope.setMode(photorealScope.value)));
     await this.baseLayers.init({
-      allowed: !!session?.allowed && (session.mode === 'google' ? !!session.googleKey : !!ionToken),
+      testTilesetUrl,
+      allowed: !!testTilesetUrl || (!!session?.allowed && (session.mode === 'google' ? !!session.googleKey : !!ionToken)),
       googleKey: session?.mode === 'google' ? session.googleKey : undefined,
       ionToken,
       arcgisKey: env.arcgisApiKey,
@@ -376,6 +384,7 @@ export class SceneController {
     for (const d of this.disposers) d();
     this.airportsLayer.destroy();
     this.airport3d.destroy();
+    this.scope.destroy();
     this.aircraft.destroy();
     if (!this.viewer.isDestroyed()) this.viewer.destroy();
   }

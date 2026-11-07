@@ -51,7 +51,8 @@ interface Loaded {
  */
 export class Airport3DLayer {
   private readonly loaded = new Map<string, Loaded>();
-  private readonly pending = new Map<string, Promise<Airport3D | null>>();
+  /** Scenery data per airport (fetched once, also in photoreal mode where it only outlines the airport). */
+  private readonly data = new Map<string, Promise<Airport3D | null>>();
   private readonly missing = new Set<string>();
   private layer: BaseLayerKind = 'offline';
   private airports?: AirportIndex;
@@ -110,6 +111,18 @@ export class Airport3DLayer {
     }
   };
 
+  /** Scenery data for an airport (static file or on-demand API), or null if there is none. Cached. */
+  dataFor(icao: string): Promise<Airport3D | null> {
+    let p = this.data.get(icao);
+    if (!p) {
+      p = this.fetchData(icao);
+      this.data.set(icao, p);
+      // Network errors should not stick forever.
+      void p.then((d) => !d && setTimeout(() => this.data.get(icao) === p && this.data.delete(icao), 10 * 60_000));
+    }
+    return p;
+  }
+
   private async fetchData(icao: string): Promise<Airport3D | null> {
     try {
       const res = await fetch(`/airports3d/${icao}.json`);
@@ -129,13 +142,7 @@ export class Airport3DLayer {
   private async load(airport: Airport) {
     const icao = airport.ident;
     if (this.loaded.has(icao) || this.missing.has(icao)) return;
-    let p = this.pending.get(icao);
-    if (!p) {
-      p = this.fetchData(icao);
-      this.pending.set(icao, p);
-    }
-    const data = await p;
-    this.pending.delete(icao);
+    const data = await this.dataFor(icao);
     if (!data || !data.buildings) {
       this.missing.add(icao);
       return;

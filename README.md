@@ -43,7 +43,7 @@ npm run dev                                      # frontend on http://localhost:
 | Phase detection | `shared/phase.ts` | ground → takeoff roll → climb → cruise → descent → approach → landing |
 | Runway assignment | `shared/runwayUsage.ts` | lined up → runway in use (learned from traffic) → wind → geometry |
 | Cameras | `src/scene/cameras.ts`, `shared/airportPresets.ts` | chase, orbit, cockpit, tower, runway-end |
-| Base layers | `src/scene/baseLayers.ts` | Google 3D Tiles → Cesium ion → offline globe, with session caps |
+| Base layers | `src/scene/baseLayers.ts`, `src/scene/photorealScope.ts` | Google 3D Tiles (default: only at airports, flat 2D satellite map around) → Cesium ion → satellite → offline globe, with session caps |
 | Weather & sky | `src/scene/sky.ts`, `worker/src/routes/weather.ts` | sun tint, visibility fog, cloud layer from METAR / Open-Meteo |
 | Replay | `src/motion/hermite.ts`, `src/scene/replay.ts` | 60 min from D1 track points |
 | Alerts | `shared/alertRules.ts`, `worker/src/alerts/`, `worker/src/push/webpush.ts` | cron + Web Push (RFC 8291) |

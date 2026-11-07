@@ -62,6 +62,9 @@ public values go in `.env.local` (frontend) or `worker/wrangler.toml` `[vars]`.
 5. Store it on the Worker: `npx wrangler secret put GOOGLE_MAPS_API_KEY --config worker/wrangler.toml`
    (locally: `GOOGLE_MAPS_API_KEY=...` in `worker/.dev.vars`).
 6. Tune caps in `worker/wrangler.toml`: `TILES_SESSIONS_PER_USER_DAY`, `TILES_SESSIONS_GLOBAL_DAY`.
+7. By default the app shows these 3D tiles **only at airports**; the rest of the city is a flat 2D satellite map.
+   Users can switch to "Everywhere" in Settings. Away from airports no 3D tiles are streamed at all, which saves data.
+   Once the key is in, check each Indian airport (docs/india-rollout.md) for 3D coverage.
 
 ## 4. Cesium ion token (optional, better fallback layer)
 1. Sign up at https://ion.cesium.com/signup (free Community plan is fine for development; check the commercial terms

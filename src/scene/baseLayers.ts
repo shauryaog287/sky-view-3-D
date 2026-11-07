@@ -1,6 +1,6 @@
 import {
   type Viewer,
-  type Cesium3DTileset,
+  Cesium3DTileset,
   ImageryLayer,
   TileMapServiceImageryProvider,
   EllipsoidTerrainProvider,
@@ -38,6 +38,11 @@ export interface GoogleTilesConfig {
   /** Result of the backend session-cap check. */
   allowed: boolean;
   deniedReason?: string;
+  /**
+   * Mock mode only: a local stand-in tileset used instead of Google's, so the photoreal code paths (airport clipping,
+   * flat 2D map) can be exercised without a key.
+   */
+  testTilesetUrl?: string;
   /** Tileset memory budget. */
   cacheBytes?: number;
   maximumScreenSpaceError?: number;
@@ -102,7 +107,8 @@ export class BaseLayers {
   async init(cfg: GoogleTilesConfig): Promise<BaseLayerStatus> {
     // Always have the offline globe underneath so something renders immediately and without network.
     this.useOffline();
-    if (cfg.allowed && (cfg.googleKey || cfg.ionToken)) {
+    this.lastArcgisKey = cfg.arcgisKey;
+    if (cfg.allowed && (cfg.googleKey || cfg.ionToken || cfg.testTilesetUrl)) {
       const ok = await this.useGoogle(cfg);
       if (ok) return this.status;
     }
@@ -133,19 +139,22 @@ export class BaseLayers {
   private async useGoogle(cfg: GoogleTilesConfig): Promise<boolean> {
     try {
       if (!this.google) {
-        this.google = await createGooglePhotorealistic3DTileset(
-          // We ship no geocoder at all, so no non-Google geocoder is ever used with these tiles.
-          { key: cfg.googleKey, onlyUsingWithGoogleGeocoder: true },
-          {
-            cacheBytes: cfg.cacheBytes ?? 512 * 1024 * 1024,
-            maximumCacheOverflowBytes: 256 * 1024 * 1024,
-            maximumScreenSpaceError: cfg.maximumScreenSpaceError ?? 16,
-            showCreditsOnScreen: true,
-            enableCollision: true,
-            preloadFlightDestinations: true,
-            foveatedScreenSpaceError: true,
-          },
-        );
+        const opts = {
+          cacheBytes: cfg.cacheBytes ?? 512 * 1024 * 1024,
+          maximumCacheOverflowBytes: 256 * 1024 * 1024,
+          maximumScreenSpaceError: cfg.maximumScreenSpaceError ?? 16,
+          showCreditsOnScreen: true,
+          enableCollision: true,
+          preloadFlightDestinations: true,
+          foveatedScreenSpaceError: true,
+        };
+        this.google = cfg.testTilesetUrl
+          ? await Cesium3DTileset.fromUrl(cfg.testTilesetUrl, opts)
+          : await createGooglePhotorealistic3DTileset(
+              // We ship no geocoder at all, so no non-Google geocoder is ever used with these tiles.
+              { key: cfg.googleKey, onlyUsingWithGoogleGeocoder: true },
+              opts,
+            );
         this.google.customShader = this.tintShader;
         this.google.tileFailed.addEventListener((e: { url: string; message: string }) => {
           this.failureCount++;
@@ -157,7 +166,8 @@ export class BaseLayers {
         this.viewer.scene.primitives.add(this.google);
       }
       this.google.show = true;
-      // Google tiles cover the whole planet; hide the ellipsoid globe to avoid z-fighting and save GPU.
+      // Google tiles cover the whole planet; hide the ellipsoid globe to avoid z-fighting and save GPU. (With
+      // "3D at airports only" the PhotorealScope clips the tiles and shows the globe as the flat 2D map instead.)
       this.viewer.scene.globe.show = false;
       this.set({ kind: 'google3d' });
       return true;
@@ -176,6 +186,35 @@ export class BaseLayers {
   }
 
   private lastArcgisKey?: string;
+
+  /**
+   * The flat 2D satellite map shown around photoreal airports ("3D at airports only"). Loads the Esri layer on first
+   * use; the offline globe stays underneath while it loads.
+   */
+  showFlatImagery(on: boolean) {
+    if (!on) {
+      if (this.satelliteLayer && this.status.kind === 'google3d') this.satelliteLayer.show = false;
+      return;
+    }
+    if (this.satelliteLayer) {
+      this.satelliteLayer.show = true;
+      return;
+    }
+    if (this.loadingFlat) return;
+    this.loadingFlat = true;
+    const url = new Resource({ url: ESRI_WORLD_IMAGERY, queryParameters: this.lastArcgisKey ? { token: this.lastArcgisKey } : undefined });
+    void ArcGisMapServerImageryProvider.fromUrl(url, { enablePickFeatures: false })
+      .then((provider) => {
+        if (this.satelliteLayer) return;
+        this.satelliteLayer = this.viewer.imageryLayers.addImageryProvider(provider);
+        this.satelliteCredit = new Credit('Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community', true);
+        this.viewer.creditDisplay.addStaticCredit(this.satelliteCredit);
+      })
+      .catch((e) => console.warn('[tiles] satellite imagery unavailable for the 2D map', e))
+      .finally(() => (this.loadingFlat = false));
+  }
+
+  private loadingFlat = false;
 
   /**
    * Real satellite/aerial imagery on the ellipsoid: airports show their actual runways, taxiways, aprons and terminal

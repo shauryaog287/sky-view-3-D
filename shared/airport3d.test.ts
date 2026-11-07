@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { convertOsm, simplify, toLatLon, type OsmElement } from './airport3d';
-import { offsetLatLon } from './geo';
+import { airportArea, convertOsm, convexHull, simplify, toLatLon, type Airport3D, type OsmElement } from './airport3d';
+import { enuOffsetM, offsetLatLon } from './geo';
+import vidpJson from '../public/airports3d/VIDP.json';
 
 const O: [number, number] = [28.5665, 77.1031];
 const sq = (e: number, n: number, s: number) => {
@@ -63,5 +64,43 @@ describe('OSM → 3D airport', () => {
 
   it('simplifies collinear points', () => {
     expect(simplify([0, 0, 1, 0.01, 2, 0, 3, 0, 3, 3], 0.1)).toEqual([0, 0, 3, 0, 3, 3]);
+  });
+});
+
+describe('airport area', () => {
+  it('convex hull drops interior points', () => {
+    const h = convexHull([
+      [0, 0],
+      [10, 0],
+      [10, 10],
+      [0, 10],
+      [5, 5],
+      [3, 7],
+    ]);
+    expect(h).toHaveLength(4);
+  });
+
+  it('covers every runway end and the terminal, with a margin', () => {
+    const data = vidpJson as unknown as Airport3D;
+    const ap = { lat: 28.5665, lon: 77.1031, runways: [{ le: { lat: 28.5675, lon: 77.0727 }, he: { lat: 28.5594, lon: 77.1131 } }] };
+    const ring = airportArea(ap, data);
+    expect(ring.length).toBeGreaterThan(8);
+    expect(ring.length).toBeLessThan(400);
+    // Point-in-polygon in local metres.
+    const local = ring.map((p) => enuOffsetM(ap.lat, ap.lon, p.lat, p.lon));
+    const inside = (lat: number, lon: number) => {
+      const q = enuOffsetM(ap.lat, ap.lon, lat, lon);
+      let c = false;
+      for (let i = 0, j = local.length - 1; i < local.length; j = i++) {
+        const a = local[i];
+        const b = local[j];
+        if (a.north > q.north !== b.north > q.north && q.east < ((b.east - a.east) * (q.north - a.north)) / (b.north - a.north) + a.east) c = !c;
+      }
+      return c;
+    };
+    expect(inside(28.5675, 77.0727)).toBe(true);
+    expect(inside(28.5594, 77.1131)).toBe(true);
+    expect(inside(28.5562, 77.0869)).toBe(true); // terminal 3 area
+    expect(inside(28.62, 77.2)).toBe(false); // central Delhi stays 2D
   });
 });

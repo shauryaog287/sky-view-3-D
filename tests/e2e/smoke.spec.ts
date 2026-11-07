@@ -75,6 +75,11 @@ test('settings: quality presets and toggles', async ({ page }) => {
   await expect(sheet).toBeVisible();
   await page.getByTestId('quality-low').click();
   await expect(page.getByTestId('quality-low')).toHaveAttribute('aria-checked', 'true');
+  // Photoreal 3D defaults to airports only (the rest of the city stays a flat 2D map).
+  await expect(page.getByTestId('scope-airports')).toHaveAttribute('aria-checked', 'true');
+  await page.getByTestId('scope-everywhere').click();
+  await expect(page.getByTestId('scope-everywhere')).toHaveAttribute('aria-checked', 'true');
+  await page.getByTestId('scope-airports').click();
   await page.getByTestId('quality-high').click(); // open launch mode: everything unlocked
   await expect(page.getByTestId('quality-high')).toHaveAttribute('aria-checked', 'true');
   await page.keyboard.press('Escape');

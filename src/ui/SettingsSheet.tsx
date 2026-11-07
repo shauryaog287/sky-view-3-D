@@ -1,5 +1,5 @@
 import { Sheet } from './Sheet';
-import { analyticsOptOut, photoreal, quality, settingsOpen, showLabels, weatherOn } from '../state/settings';
+import { analyticsOptOut, photoreal, photorealScope, quality, settingsOpen, showLabels, weatherOn } from '../state/settings';
 import { QUALITY, type QualityLevel } from '../config/quality';
 import { useFeature, launchMode } from '../state/entitlements';
 import { baseLayerStatus } from '../state/store';
@@ -47,6 +47,36 @@ export function SettingsSheet() {
         checked={photoreal.value}
         onChange={(v) => (photoreal.value = v)}
       />
+      {photoreal.value && (
+        <fieldset class="field" data-testid="photoreal-scope">
+          <legend>Where to show 3D</legend>
+          <div class="seg-row" role="radiogroup" aria-label="Where to show photorealistic 3D">
+            {(
+              [
+                ['airports', 'Airports only'],
+                ['everywhere', 'Everywhere'],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={v}
+                type="button"
+                role="radio"
+                aria-checked={photorealScope.value === v}
+                class={`seg ${photorealScope.value === v ? 'on' : ''}`}
+                onClick={() => (photorealScope.value = v)}
+                data-testid={`scope-${v}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <p class="hint">
+            {photorealScope.value === 'airports'
+              ? 'Airports in full 3D; the rest of the city is a flat 2D satellite map. Loads much less data.'
+              : 'Whole cities in 3D (more data and battery).'}
+          </p>
+        </fieldset>
+      )}
       <Toggle
         label="Live weather & clouds"
         hint="Clouds, visibility and haze from METAR / Open-Meteo near the followed flight."
