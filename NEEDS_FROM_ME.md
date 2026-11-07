@@ -59,4 +59,42 @@ public values go in `.env.local` (frontend) or `worker/wrangler.toml` `[vars]`.
 3. `npx wrangler secret put VAPID_PRIVATE_KEY --config worker/wrangler.toml` and paste the private key.
    (Locally: both lines in `worker/.dev.vars`.) Never commit the private key; rotating it invalidates subscriptions.
 
+## 7. Supabase (sign-in + subscription records)
+1. Create a project at https://supabase.com/dashboard (region: Mumbai `ap-south-1` for India).
+2. **SQL Editor** → paste and run `supabase/migrations/20261107000000_init.sql` (or `supabase db push` with the CLI).
+3. **Authentication → Providers → Email:** enabled; under **Email templates → Magic Link** make sure the template
+   includes `{{ .Token }}` so users get a 6-digit code (the app asks for the code). For production, set up custom SMTP
+   (**Project Settings → Authentication → SMTP**) — Supabase's built-in sender is rate-limited.
+4. **Authentication → URL Configuration:** Site URL = your Pages URL; add `http://localhost:5173` to Redirect URLs.
+5. **Google sign-in:** in Google Cloud → APIs & Services → Credentials → *Create OAuth client ID* (Web application);
+   Authorized redirect URI = `https://<project-ref>.supabase.co/auth/v1/callback`. Paste client id/secret into
+   Supabase → Authentication → Providers → Google. (Configure the OAuth consent screen first.)
+6. Values:
+   - `.env.local`: `VITE_SUPABASE_URL=https://<ref>.supabase.co`, `VITE_SUPABASE_ANON_KEY=<anon / publishable key>`
+   - `worker/wrangler.toml` `[vars]`: `SUPABASE_URL = "https://<ref>.supabase.co"`
+   - Secrets: `npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY --config worker/wrangler.toml`
+     (and `SUPABASE_JWT_SECRET` only if your project still uses the legacy HS256 JWT secret).
+
+## 8. Razorpay — TEST MODE ONLY (do not go live yet)
+1. Sign up at https://dashboard.razorpay.com/signup. Stay in **Test Mode** (toggle at the top of the dashboard).
+2. **Subscriptions** must be enabled on the account (Dashboard → Subscriptions; request activation if prompted).
+3. **Account & Settings → API Keys → Generate Test Key** → `rzp_test_...` + secret.
+4. Put them in `worker/.dev.vars` (`RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`) and run `npm run razorpay:plans`; copy
+   the printed `RAZORPAY_PLAN_MONTHLY` / `RAZORPAY_PLAN_YEARLY` into `worker/wrangler.toml` `[vars]` together with
+   `RAZORPAY_KEY_ID`, and set `PAYMENTS_ENABLED = "true"`.
+5. Production Worker: `npx wrangler secret put RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET`.
+6. **Account & Settings → Webhooks → Add new webhook:** URL `https://<your-worker>/api/billing/webhook/razorpay`,
+   secret = the same `RAZORPAY_WEBHOOK_SECRET`, events: `subscription.authenticated`, `subscription.activated`,
+   `subscription.charged`, `subscription.pending`, `subscription.halted`, `subscription.cancelled`,
+   `subscription.completed`, `subscription.paused`, `subscription.resumed`.
+7. Test with Razorpay's test cards / test UPI id `success@razorpay`.
+8. **Before ever going live** (not now): KYC/activation, legal entity + GST, a refund policy page, a licensed flight data
+   feed (community feeds are non-commercial), Open-Meteo commercial plan, and then live keys + `PAYMENTS_LIVE_ACK`.
+
+## 9. Analytics (optional)
+- Default needs nothing (first-party counters in D1). To read them: `npx wrangler secret put ADMIN_TOKEN` (any long
+  random string), then `curl -H "Authorization: Bearer <token>" https://<worker>/api/admin/usage?days=30`.
+- Plausible instead: `VITE_ANALYTICS=plausible`, `VITE_PLAUSIBLE_DOMAIN=<your domain>` (add the site at plausible.io).
+- PostHog instead: `VITE_ANALYTICS=posthog`, `VITE_POSTHOG_KEY=phc_...`, `VITE_POSTHOG_HOST=https://eu.i.posthog.com`.
+
 _(More items are added as milestones land.)_

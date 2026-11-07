@@ -23,6 +23,8 @@ export interface Env {
   RAZORPAY_PLAN_YEARLY?: string;
   RAZORPAY_KEY_ID?: string; // public half; still kept server-side and sent to the client per checkout
   PAYMENTS_ENABLED?: string; // "true" to allow checkout calls at all (test mode)
+  /** Live Razorpay keys are refused unless this is exactly I_UNDERSTAND_THIS_CHARGES_REAL_MONEY. */
+  PAYMENTS_LIVE_ACK?: string;
   COMMERCIAL_PROVIDER?: string;
   OPENSKY_DAILY_CREDITS?: string;
 
@@ -37,6 +39,7 @@ export interface Env {
   RAZORPAY_KEY_SECRET?: string;
   RAZORPAY_WEBHOOK_SECRET?: string;
   VAPID_PRIVATE_KEY?: string;
+  ADMIN_TOKEN?: string;
 }
 
 export function intVar(v: string | undefined, fallback: number): number {

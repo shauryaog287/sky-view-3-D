@@ -7,6 +7,9 @@ import { PinnedBar } from './ui/PinnedBar';
 import { SettingsSheet } from './ui/SettingsSheet';
 import { ReplayBar } from './ui/ReplayBar';
 import { AlertSheet } from './ui/AlertSheet';
+import { AccountSheet } from './ui/AccountSheet';
+import { UpsellSheet, MockCheckoutSheet } from './ui/UpsellSheet';
+import { AdSlot } from './ui/AdSlot';
 import { settingsOpen } from './state/settings';
 
 export function App() {
@@ -31,6 +34,10 @@ export function App() {
       <ReplayBar />
       <SettingsSheet />
       <AlertSheet />
+      <AccountSheet />
+      <UpsellSheet />
+      <MockCheckoutSheet />
+      <AdSlot placement="map-corner" />
       <Toasts />
       <WebglErrorScreen />
     </div>

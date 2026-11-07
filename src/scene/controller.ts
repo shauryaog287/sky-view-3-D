@@ -242,7 +242,8 @@ export class SceneController {
     this.phases.tick();
     const t = this.phases.get(hex);
     const m = t?.runway;
-    if (!t || !m || m.distToEndM > 25_000) return false;
+    // 40 km covers a full ILS final (intercepts are typically 10–18 NM out).
+    if (!t || !m || m.distToEndM > 40_000) return false;
     const arrival = t.phase === 'approach' || t.phase === 'landing' || t.phase === 'descent';
     // m.end is the runway end aligned with the aircraft's track: the landing threshold, or the end it departs from.
     const vp = mode === 'tower' ? towerViewpoint(m.airport, m.runway, m.end) : runwayViewpoint(m.airport, m.runway, m.end, arrival ? 'arrival' : 'departure');

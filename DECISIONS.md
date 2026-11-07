@@ -202,3 +202,37 @@ Short architecture decision records. Newest decisions are appended at the bottom
 - Without push (mock mode, no VAPID keys, permission denied, iOS Safari outside an installed PWA) alerts are evaluated
   in-app while SkyView is open: toast + local notification, and the alert is then deleted server-side so nothing fires
   twice.
+
+## D-023 · Feature flags & the off-by-default paywall
+- `src/config/features.ts` is the single registry: 14 features, each `free | pro`; `canUse(id, ctx)` is the only gate,
+  pure, and used by both the browser (`useFeature(id)` / `canUseFeature`) and the Worker (`requireFeature` → HTTP 402).
+- `LAUNCH_MODE` lives in the Worker (`wrangler.toml`), served via `/api/config`; the frontend only uses
+  `VITE_LAUNCH_MODE` until that answers. Turning the paywall on = set `LAUNCH_MODE = "freemium"` and deploy the Worker.
+  `FEATURE_TIERS` (JSON) moves individual features between tiers without code changes.
+- Locked features show a 🔒 and open the upsell sheet (with plan prices), never a broken screen. In freemium, free
+  users get the ion/offline layer instead of billed Google tiles; High quality falls back to Medium.
+- Mock mode has a "simulate freemium" switch (Settings) and a fake checkout so the whole paywall can be demoed.
+
+## D-024 · Auth: Supabase, verified in the Worker
+- Browser: `@supabase/supabase-js` (lazy-loaded only when a session exists or the user signs in) with email OTP (6-digit
+  code) and Google OAuth (PKCE). The access token is sent as `Authorization: Bearer` to our API.
+- Worker: `jose` verifies the JWT against the project's JWKS (new asymmetric signing keys) with the legacy HS256 JWT
+  secret as a fallback; audience `authenticated`, issuer `<SUPABASE_URL>/auth/v1`, anonymous users rejected.
+- Supabase stores profiles and subscriptions (RLS: users read their own rows; only the Worker's service-role key writes).
+
+## D-025 · Payments: PaymentProvider interface, Razorpay in TEST mode only
+- `worker/src/billing/types.ts` defines the provider interface; `RazorpayProvider` implements Razorpay Subscriptions
+  (UPI autopay/cards/e-mandate), `StripeProviderStub` reserves the slot. Routes and entitlements are provider-agnostic.
+- Flow: `POST /api/billing/checkout` creates a Razorpay subscription with `notes.user_id` → browser opens Razorpay
+  Checkout → handler response verified (`HMAC(payment_id|subscription_id, key_secret)`) → status stored in Supabase →
+  webhooks (`X-Razorpay-Signature` = HMAC of the raw body) keep it in sync; event ids are recorded for idempotency.
+- Pro access: `active`, `authenticated`, `pending` (grace while Razorpay retries), or `cancelled` until the paid
+  period ends. Cancel = `cancel_at_cycle_end`.
+- **Guardrails:** checkout is off unless `PAYMENTS_ENABLED="true"`; the provider refuses any key that does not start
+  with `rzp_test_` unless `PAYMENTS_LIVE_ACK="I_UNDERSTAND_THIS_CHARGES_REAL_MONEY"`. Nothing in this repo goes live.
+
+## D-026 · Analytics
+- Default: first-party, aggregated, anonymous. The browser counts `feature × {use, locked, upsell_click}` and posts
+  totals every minute / on tab hide to `/api/events`; the Worker adds them to daily rows in D1. No cookies, no ids,
+  no IPs. `GET /api/admin/usage?days=30` (Bearer `ADMIN_TOKEN`) shows what people actually use — the data for deciding
+  what to lock later. Plausible or PostHog can be switched on via `VITE_ANALYTICS`. Opt-out toggle, DNT and GPC respected.

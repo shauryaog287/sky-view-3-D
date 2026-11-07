@@ -939,3 +939,87 @@ select {
 .alert-row.done {
   opacity: 0.6;
 }
+
+/* ── Account / plans / upsell ─────────────────────────────────────────────── */
+.kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  margin: 0 0 12px;
+}
+.kv dt {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.kv dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.note {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(57, 208, 255, 0.08);
+  border: 1px solid rgba(57, 208, 255, 0.3);
+  font-size: 13px;
+}
+.plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0;
+}
+@media (max-width: 380px) {
+  .plans {
+    grid-template-columns: 1fr;
+  }
+}
+.plan {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+.plan-name {
+  font-weight: 700;
+}
+.plan-price {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 4px 0;
+}
+.plan-price span {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+.btn.google {
+  width: 100%;
+  background: #fff;
+  color: #1f1f1f;
+}
+.or {
+  text-align: center;
+  color: var(--text-faint);
+  margin: 10px 0;
+  font-size: 13px;
+}
+.upsell-lead {
+  font-size: 15px;
+}
+.pro-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  columns: 2;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.pro-list li {
+  padding: 3px 0;
+  break-inside: avoid;
+}
+.pro-list li.hl {
+  color: var(--accent);
+  font-weight: 600;
+}

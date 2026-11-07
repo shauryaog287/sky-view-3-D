@@ -5,6 +5,9 @@ import { useFeature, launchMode } from '../state/entitlements';
 import { baseLayerStatus } from '../state/store';
 import { accountOpen } from '../state/account';
 import { legalPage } from '../state/legal';
+import { api } from '../api';
+import { readPref, writePref } from '../lib/device';
+import { loadConfigAndEntitlements } from '../state/bootstrap';
 
 export function SettingsSheet() {
   if (!settingsOpen.value) return null;
@@ -57,6 +60,18 @@ export function SettingsSheet() {
         checked={!analyticsOptOut.value}
         onChange={(v) => (analyticsOptOut.value = !v)}
       />
+
+      {api.mode === 'mock' && (
+        <Toggle
+          label="Demo: simulate freemium (paywall on)"
+          hint="Mock mode only. Shows how Pro features lock and the upsell / test checkout flow works."
+          checked={readPref<string>('mock_launch_mode', 'open') === 'freemium'}
+          onChange={(v) => {
+            writePref('mock_launch_mode', v ? 'freemium' : 'open');
+            void loadConfigAndEntitlements();
+          }}
+        />
+      )}
 
       <div class="link-list">
         <button class="btn" onClick={() => ((settingsOpen.value = false), (accountOpen.value = true))} data-testid="open-account">
