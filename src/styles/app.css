@@ -699,3 +699,125 @@ select {
   border-color: rgba(255, 181, 71, 0.8);
   box-shadow: 0 0 0 2px rgba(255, 181, 71, 0.18);
 }
+
+/* ── Sheets (settings, account, upsell, alerts, legal) ────────────────────── */
+.sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  background: rgba(2, 6, 12, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sheet {
+  width: 100%;
+  max-height: 88vh;
+  overflow: auto;
+  background: var(--panel-solid);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px 18px 0 0;
+  padding: 14px 16px calc(16px + var(--safe-bottom));
+  box-shadow: var(--shadow);
+}
+@media (min-width: 760px) {
+  .sheet-backdrop {
+    align-items: center;
+  }
+  .sheet {
+    width: 460px;
+    border-radius: 18px;
+    max-height: 82vh;
+  }
+  .sheet.wide {
+    width: 680px;
+  }
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.sheet-head h2 {
+  margin: 0;
+  font-size: 19px;
+}
+.field {
+  border: 0;
+  padding: 0;
+  margin: 0 0 14px;
+}
+.field legend {
+  font-weight: 650;
+  margin-bottom: 8px;
+}
+.seg-row {
+  display: flex;
+  gap: 6px;
+}
+.hint {
+  display: block;
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--panel-border);
+  cursor: pointer;
+}
+.toggle-label {
+  font-weight: 600;
+}
+.toggle input[type='checkbox'] {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.toggle input[type='checkbox']::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+}
+.toggle input[type='checkbox']:checked {
+  background: var(--accent);
+}
+.toggle input[type='checkbox']:checked::after {
+  transform: translateX(18px);
+}
+.link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--panel-border);
+}
+.linkish {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  text-align: left;
+  padding: 10px 0;
+  min-height: 40px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

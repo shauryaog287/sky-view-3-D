@@ -10,7 +10,8 @@ import { openReplay } from '../state/replay';
 import { openAlertSheet } from '../state/alerts';
 import { flightNumberFromCallsign, airlineFromCallsign } from '../../shared/airlines';
 import { fmtAge, fmtAlt, fmtAltFeet, fmtHeading, fmtKmh, fmtSpeed, fmtVs, freshness } from '../lib/format';
-import type { FlightInfo } from '../../shared/types';
+import type { FlightInfo, WeatherInfo } from '../../shared/types';
+import { focusWeather } from '../state/weather';
 
 export function InfoPanel() {
   const hex = selectedHex.value;
@@ -92,6 +93,7 @@ export function InfoPanel() {
           {fresh === 'live' ? 'Live' : fresh === 'estimated' ? 'Estimated' : 'Stale'} · {fmtAge(ageMs)} old
         </span>
         {s.squawk && ['7500', '7600', '7700'].includes(s.squawk) && <span class="chip danger">Squawk {s.squawk}</span>}
+        {focusWeather.value?.key === a.hex && <WeatherChip w={focusWeather.value.info} />}
       </div>
 
       <dl class="readouts">
@@ -200,4 +202,21 @@ function FeatureButton({ id, label, icon, onClick }: { id: 'replay' | 'alerts'; 
 
 function sourceLabel(id: string) {
   return { adsblol: 'adsb.lol', airplaneslive: 'airplanes.live', opensky: 'OpenSky', commercial: 'licensed feed', fixture: 'sample data' }[id] ?? id;
+}
+
+function WeatherChip({ w }: { w: WeatherInfo }) {
+  const m = w.metar;
+  const layer = m?.clouds[0];
+  const vis = w.visibilityM;
+  const parts = [
+    layer ? `${layer.cover} ${layer.baseFt.toLocaleString('en-US')} ft` : w.cloudCover !== undefined ? `Cloud ${Math.round(w.cloudCover)}%` : undefined,
+    vis !== undefined ? `Vis ${vis >= 10_000 ? '10+ km' : vis >= 1000 ? `${(vis / 1000).toFixed(1)} km` : `${Math.round(vis / 50) * 50} m`}` : undefined,
+    m?.wx,
+    m?.station,
+  ].filter(Boolean);
+  return (
+    <span class="chip" title={m?.raw ?? w.sources.join(', ')} data-testid="weather-chip">
+      ☁ {parts.join(' · ')}
+    </span>
+  );
 }

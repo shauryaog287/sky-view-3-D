@@ -157,3 +157,28 @@ Short architecture decision records. Newest decisions are appended at the bottom
   restrictions plus a hard daily quota in Google Cloud (see NEEDS_FROM_ME). The Worker can also hand out the public
   Cesium ion token so the frontend build needs no tokens at all.
 - Without photoreal tiles, runways and airport codes are drawn as overlays so takeoffs/landings still read clearly.
+
+## D-019 · Weather & sky
+- `/api/weather`: Open-Meteo current conditions (cloud cover by level, visibility, wind) on a 0.25° grid + the nearest
+  METAR (aviationweather.gov bbox query on a 0.5° cell), both cached 10 min (Cache API). A METAR within 40 km overrides
+  the model's visibility. Only fetched for the followed/selected aircraft (or a low camera), ≤ every 10 min / 25 km.
+- **Sun:** Cesium lighting follows the real clock. Photoreal tiles have baked daylight, so a CustomShader multiplies
+  them by a brightness + tint from solar elevation (day → golden hour → twilight → night; `shared/sun.ts`, tested).
+- **Visibility:** a depth-based post-process fog (Cesium's built-in fog only helps distant globe tiles). Density
+  = 3 / visibility (≈ 5 % contrast at the reported visibility), fading out as the camera climbs above ~1–4.5 km AGL.
+  Haze/smoke (HZ, FU, DU) is tinted brown, mist grey-blue, and fog darkens at night. Note: with Cesium's logarithmic
+  depth buffer the shader must decode the raw log depth itself (`czm_windowToEyeCoordinates` expects raw log depth);
+  feeding it `czm_readDepth` output double-decodes and over-fogs everything.
+- **Clouds:** Cesium `CloudCollection` cumulus billboards at the METAR cloud base (≤ 2 layers; FEW/SCT/BKN/OVC → 20/45/75/100 %
+  of the quality budget) within 14 km of the followed aircraft, placed with a seeded PRNG so the field is stable.
+  Falls back to Open-Meteo low/mid cloud cover. It is an approximation, not a cloud simulation.
+- METAR QNH feeds the altitude correction near the reporting airport (pressure altitude ≠ true altitude).
+
+## D-020 · Quality presets & performance
+- Low / Medium / High (`src/config/quality.ts`): resolution scale and a device-pixel-ratio cap (phones report DPR 3+;
+  rendering a map at 3× is wasted GPU), tiles/globe screen-space error, tile cache size, 3D-model count and distance,
+  cloud budget, fog, shadows, FXAA and target FPS (30 on Low for battery). Default: Low on ≤ 4 cores / ≤ 3 GB RAM,
+  Medium otherwise. High is a Pro feature (falls back to Medium when locked).
+- Per-frame CPU for 200 aircraft (motion sampling) measured at ~0.12 ms (`src/motion/perf.test.ts`); LOD re-selection
+  runs at 4 Hz instead of every frame; billboards for everything else. Real-device GPU profiling is still needed
+  (see the device test list in README).

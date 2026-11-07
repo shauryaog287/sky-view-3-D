@@ -9,6 +9,7 @@ const cesiumBaseUrl = 'cesiumStatic';
 export default defineConfig(({ mode }) => ({
   define: {
     CESIUM_BASE_URL: JSON.stringify(`/${cesiumBaseUrl}`),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.1.0'),
   },
   plugins: [
     preact(),

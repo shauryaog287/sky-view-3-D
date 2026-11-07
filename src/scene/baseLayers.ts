@@ -10,6 +10,7 @@ import {
   CustomShader,
   UniformType,
   LightingModel,
+  Cartesian3,
 } from 'cesium';
 
 export type BaseLayerKind = 'google3d' | 'ion' | 'offline';
@@ -47,15 +48,15 @@ export class BaseLayers {
   private failureCount = 0;
   private offlineLayer?: ImageryLayer;
   private ionLayer?: ImageryLayer;
-  readonly brightness = { value: 1.0 };
   private readonly tintShader = new CustomShader({
     lightingModel: LightingModel.UNLIT,
     uniforms: {
       u_brightness: { type: UniformType.FLOAT, value: 1.0 },
+      u_tint: { type: UniformType.VEC3, value: new Cartesian3(1, 1, 1) },
     },
     fragmentShaderText: `
       void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
-        material.diffuse *= u_brightness;
+        material.diffuse *= u_brightness * u_tint;
       }
     `,
   });
@@ -80,9 +81,10 @@ export class BaseLayers {
     for (const l of this.listeners) l(s);
   }
 
-  /** Day/night dimming of photoreal tiles (they have baked lighting, so we scale their colour). */
-  setTileBrightness(v: number) {
-    this.tintShader.setUniform('u_brightness', v);
+  /** Day/night dimming + tint of photoreal tiles (they have baked daylight, so we scale their colour). */
+  setTileTone(brightness: number, tint: [number, number, number]) {
+    this.tintShader.setUniform('u_brightness', brightness);
+    this.tintShader.setUniform('u_tint', new Cartesian3(tint[0], tint[1], tint[2]));
   }
 
   async init(cfg: GoogleTilesConfig): Promise<BaseLayerStatus> {

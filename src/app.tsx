@@ -4,6 +4,8 @@ import { FeedBanner, FlightCount } from './ui/FeedBanner';
 import { InfoPanel } from './ui/InfoPanel';
 import { SearchBox } from './ui/SearchBox';
 import { PinnedBar } from './ui/PinnedBar';
+import { SettingsSheet } from './ui/SettingsSheet';
+import { settingsOpen } from './state/settings';
 
 export function App() {
   return (
@@ -17,10 +19,14 @@ export function App() {
         <SearchBox />
         <FlightCount />
         <LayerBadge />
+        <button class="icon-btn" aria-label="Settings" onClick={() => (settingsOpen.value = true)} data-testid="open-settings">
+          ⚙
+        </button>
       </header>
       <FeedBanner />
       <InfoPanel />
       <PinnedBar />
+      <SettingsSheet />
       <Toasts />
       <WebglErrorScreen />
     </div>

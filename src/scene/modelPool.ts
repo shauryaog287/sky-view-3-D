@@ -35,16 +35,25 @@ export class ModelPool {
 
   constructor(private readonly scene: Scene) {}
 
+  private lastPick = 0;
+  private picked = new Set<string>();
+
   update(list: readonly FrameAircraft[], selected: string | null, followed: string | null): Set<string> {
+    // Re-choose which aircraft deserve a model 4×/s (sorting every frame is wasted work); matrices update every frame.
+    const t = performance.now();
+    if (t - this.lastPick > 250 || (selected && !this.picked.has(selected)) || (followed && !this.picked.has(followed))) {
+      this.lastPick = t;
+      const next = new Set<string>();
+      for (const f of list) if ((f.a.hex === selected || f.a.hex === followed) && f.dist < this.focusDistance) next.add(f.a.hex);
+      const near = list.filter((f) => f.dist < this.maxDistance && !next.has(f.a.hex)).sort((a, b) => a.dist - b.dist);
+      for (const f of near) {
+        if (next.size >= this.maxModels) break;
+        next.add(f.a.hex);
+      }
+      this.picked = next;
+    }
     const want = new Map<string, FrameAircraft>();
-    for (const f of list) {
-      if ((f.a.hex === selected || f.a.hex === followed) && f.dist < this.focusDistance) want.set(f.a.hex, f);
-    }
-    const near = list.filter((f) => f.dist < this.maxDistance && !want.has(f.a.hex)).sort((a, b) => a.dist - b.dist);
-    for (const f of near) {
-      if (want.size >= this.maxModels) break;
-      want.set(f.a.hex, f);
-    }
+    for (const f of list) if (this.picked.has(f.a.hex)) want.set(f.a.hex, f);
     // Release models no longer wanted.
     for (const [hex, slot] of this.active) {
       if (!want.has(hex)) {

@@ -58,3 +58,17 @@ test('approach detection offers tower and runway cameras', async ({ page }) => {
   await expect(page.getByTestId('cam-runway')).toHaveAttribute('aria-pressed', 'true');
   expect(errors).toEqual([]);
 });
+
+test('settings: quality presets and toggles', async ({ page }) => {
+  const errors = await boot(page);
+  await page.getByTestId('open-settings').click();
+  const sheet = page.getByTestId('settings');
+  await expect(sheet).toBeVisible();
+  await page.getByTestId('quality-low').click();
+  await expect(page.getByTestId('quality-low')).toHaveAttribute('aria-checked', 'true');
+  await page.getByTestId('quality-high').click(); // open launch mode: everything unlocked
+  await expect(page.getByTestId('quality-high')).toHaveAttribute('aria-checked', 'true');
+  await page.keyboard.press('Escape');
+  await expect(sheet).toBeHidden();
+  expect(errors).toEqual([]);
+});

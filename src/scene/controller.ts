@@ -1,4 +1,4 @@
-import { Cartesian3, Cartographic, ScreenSpaceEventHandler, ScreenSpaceEventType, type Viewer, type Cartesian2 } from 'cesium';
+import { Cartesian3, Cartographic, ScreenSpaceEventHandler, ScreenSpaceEventType, ShadowMode, type Viewer, type Cartesian2 } from 'cesium';
 import { effect } from '@preact/signals';
 import { createViewer } from './viewer';
 import { BaseLayers } from './baseLayers';
@@ -9,6 +9,10 @@ import { CameraRig } from './cameras';
 import { GroundHeights } from './ground';
 import { PhaseTracker } from './phaseTracker';
 import { AirportLayer } from './airportLayer';
+import { SkyController, cartoDeg } from './sky';
+import { WeatherWatcher } from './weatherWatcher';
+import { QUALITY, type QualityLevel } from '../config/quality';
+import { photoreal, quality, showLabels, weatherOn } from '../state/settings';
 import { env } from '../config/env';
 import { api } from '../api';
 import { baseLayerStatus, toast } from '../state/store';
@@ -17,7 +21,6 @@ import { cameraMode, followHex, selectedHex } from '../state/selection';
 import { canUseFeature, featureContext } from '../state/entitlements';
 import { flightInfo } from '../state/flightInfo';
 import { loadAirports } from '../data/airports';
-import { readPref } from '../lib/device';
 import { FT_TO_M } from '../../shared/geo';
 import { towerViewpoint, runwayViewpoint } from '../../shared/airportPresets';
 import type { FlightPhase } from '../../shared/types';
@@ -36,6 +39,10 @@ export class SceneController {
   readonly ground: GroundHeights;
   readonly phases: PhaseTracker;
   readonly airportsLayer: AirportLayer;
+  readonly sky: SkyController;
+  private readonly weather: WeatherWatcher;
+  private weatherTimer?: ReturnType<typeof setInterval>;
+  qualityLevel: QualityLevel = 'medium';
   private readonly disposers: (() => void)[] = [];
   private handler?: ScreenSpaceEventHandler;
   private lastFrame = 0;
@@ -56,6 +63,14 @@ export class SceneController {
     this.airportsLayer = new AirportLayer(this.viewer);
     this.feed = new LiveFeed(this.viewer);
     this.cameras = new CameraRig(this.viewer, this.aircraft);
+    this.sky = new SkyController(this.viewer, this.baseLayers);
+    this.weather = new WeatherWatcher((w) => {
+      this.sky.setWeather(w);
+      // METAR altimeter corrects pressure altitudes near that airport (QNH ≠ 1013.25).
+      const m = w?.metar;
+      const ap = m ? this.phases.airportIndex?.get(m.station) : undefined;
+      if (ap && m?.altimeterHpa) this.ground.setQnh(ap.ident, m.altimeterHpa);
+    });
 
     this.baseLayers.onChange((s) => {
       baseLayerStatus.value = s;
@@ -84,6 +99,8 @@ export class SceneController {
       this.lastFrame = now;
       if (this.aircraft.models) this.aircraft.models.silhouettes = cameraMode.value === 'free' || cameraMode.value === 'orbit' || cameraMode.value === 'chase';
       this.aircraft.update(now);
+      const focus = this.focusPoint();
+      this.sky.update(now, focus);
       if (!this.cameras.update(now)) {
         // The followed aircraft disappeared from the feed (landed and stopped reporting, or out of coverage).
         followHex.value = null;
@@ -94,6 +111,26 @@ export class SceneController {
     };
     this.viewer.scene.preRender.addEventListener(pre);
     this.disposers.push(() => this.viewer.scene.preRender.removeEventListener(pre));
+
+    // Quality preset (High is Pro) and label preference.
+    this.disposers.push(
+      effect(() => {
+        const want = quality.value;
+        this.applyQuality(want === 'high' && !canUseFeature('quality_high') ? 'medium' : want);
+      }),
+    );
+    this.disposers.push(
+      effect(() => {
+        this.aircraft.labelsForNearby = showLabels.value;
+      }),
+    );
+    this.disposers.push(
+      effect(() => {
+        void featureContext.value;
+        const q = QUALITY[this.qualityLevel];
+        this.sky.configure({ maxClouds: q.clouds, fog: q.fog, effects: weatherOn.value && canUseFeature('weather_effects') });
+      }),
+    );
 
     this.disposers.push(
       effect(() => {
@@ -114,6 +151,48 @@ export class SceneController {
       if (followHex.value && hex !== followHex.value) return; // taps while following do not change selection
       selectedHex.value = hex ?? (followHex.value ? selectedHex.value : null);
     }, ScreenSpaceEventType.LEFT_CLICK);
+  }
+
+  /** Where weather and clouds matter: the followed (else selected) aircraft, or a low camera's ground point. */
+  private focusPoint(): { lat: number; lon: number; key: string } | undefined {
+    const hex = followHex.value ?? selectedHex.value;
+    const f = this.aircraft.frameOf(hex);
+    if (f) {
+      const t = this.phases.get(f.a.hex);
+      this.sky.groundM = t?.ref ? this.ground.groundM(t.ref) : 0;
+      return { lat: f.pose.lat, lon: f.pose.lon, key: f.a.hex };
+    }
+    const cam = this.viewer.camera.positionCartographic;
+    if (cam.height < 40_000) {
+      this.sky.groundM = 0;
+      return { ...cartoDeg(cam), key: 'camera' };
+    }
+    return undefined;
+  }
+
+  applyQuality(level: QualityLevel) {
+    this.qualityLevel = level;
+    const q = QUALITY[level];
+    const v = this.viewer;
+    const dpr = window.devicePixelRatio || 1;
+    v.useBrowserRecommendedResolution = false;
+    v.resolutionScale = (Math.min(dpr, q.maxPixelRatio) / dpr) * q.resolutionScale;
+    v.scene.globe.maximumScreenSpaceError = q.globeSse;
+    v.scene.postProcessStages.fxaa.enabled = q.fxaa;
+    v.targetFrameRate = q.targetFps;
+    v.shadows = q.shadows;
+    v.terrainShadows = q.shadows ? ShadowMode.RECEIVE_ONLY : ShadowMode.DISABLED;
+    if (this.aircraft.models) {
+      this.aircraft.models.maxModels = q.maxModels;
+      this.aircraft.models.maxDistance = q.modelDistanceM;
+      this.aircraft.models.shadows = q.shadows;
+    }
+    const ts = this.baseLayers.googleTileset;
+    if (ts) {
+      ts.maximumScreenSpaceError = q.tilesSse;
+      ts.cacheBytes = q.tilesCacheMB * 1024 * 1024;
+    }
+    this.sky.configure({ maxClouds: q.clouds, fog: q.fog, effects: weatherOn.value && canUseFeature('weather_effects') });
   }
 
   private onPhase(hex: string, _prev: FlightPhase | undefined, next: FlightPhase) {
@@ -177,14 +256,18 @@ export class SceneController {
       this.phases.setAirports(a);
       this.airportsLayer.setAirports(a);
     });
+    this.weatherTimer = setInterval(() => {
+      void this.weather.check(this.focusPoint(), weatherOn.value && canUseFeature('weather_effects'));
+    }, 4000);
     await this.initTiles();
+    this.applyQuality(this.qualityLevel);
   }
 
   private photorealAttempted = false;
 
   /** One tiles session per page load (one billable Google root request at most). */
   private async initTiles() {
-    const wantPhotoreal = readPref('photoreal', true) && canUseFeature('airport_views');
+    const wantPhotoreal = photoreal.value && canUseFeature('airport_views');
     this.photorealAttempted = wantPhotoreal;
     const session = wantPhotoreal ? await api.tilesSession().catch(() => undefined) : undefined;
     const ionToken = env.cesiumIonToken ?? session?.ionToken;
@@ -197,14 +280,14 @@ export class SceneController {
           ? 'Photorealistic 3D turned off in settings'
           : 'Photorealistic 3D is a Pro feature'
         : (session?.reason ?? 'Photorealistic tiles unavailable'),
-      cacheBytes: 384 * 1024 * 1024,
-      maximumScreenSpaceError: 16,
+      cacheBytes: QUALITY[this.qualityLevel].tilesCacheMB * 1024 * 1024,
+      maximumScreenSpaceError: QUALITY[this.qualityLevel].tilesSse,
     });
     // If the user upgrades mid-session (freemium), switch to photoreal without reloading.
     this.disposers.push(
       effect(() => {
         void featureContext.value;
-        if (!this.photorealAttempted && canUseFeature('airport_views') && readPref('photoreal', true)) void this.upgradeTiles();
+        if (!this.photorealAttempted && canUseFeature('airport_views') && photoreal.value) void this.upgradeTiles();
       }),
     );
   }
@@ -223,6 +306,8 @@ export class SceneController {
   destroy() {
     this.feed.stop();
     this.phases.stop();
+    clearInterval(this.weatherTimer);
+    this.sky.destroy();
     this.handler?.destroy();
     for (const d of this.disposers) d();
     this.airportsLayer.destroy();

@@ -46,4 +46,10 @@ public values go in `.env.local` (frontend) or `worker/wrangler.toml` `[vars]`.
 3. Put it in `worker/.dev.vars` / `wrangler secret put CESIUM_ION_TOKEN` (the Worker hands it to the browser), or in
    `.env.local` as `VITE_CESIUM_ION_TOKEN`.
 
+## 5. Weather data licensing (before you charge money)
+- **Open-Meteo** is free for non-commercial use only. Before `LAUNCH_MODE=freemium` with live payments, buy an API
+  plan at https://open-meteo.com/en/pricing and put the key in the Worker (the code then needs `&apikey=` and the
+  `customer-api.open-meteo.com` host — a one-line change in `worker/src/routes/weather.ts`).
+- **aviationweather.gov** (NOAA) data is public domain; no action needed.
+
 _(More items are added as milestones land.)_
