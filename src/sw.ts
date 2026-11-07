@@ -6,8 +6,9 @@ import { ExpirationPlugin } from 'workbox-expiration';
 
 /**
  * Service worker: offline app shell (not data) + Web Push notifications.
- *  - The built app (HTML/JS/CSS/models/icons/airports) is precached.
- *  - Cesium's static assets (workers, offline Natural Earth imagery) are cached on first use.
+ *  - The built app (HTML/JS/CSS/icons/airports) is precached.
+ *  - Cesium's static assets (workers, offline Natural Earth imagery) and the per-type aircraft models are cached on
+ *    first use (models are versioned by content hash, so cache-first is safe).
  *  - /api/* is network-only: live flight data must never come from a stale cache.
  */
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: Array<{ url: string; revision: string | null }> };
@@ -19,6 +20,10 @@ registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html'), { deny
 registerRoute(
   ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/cesiumStatic/'),
   new CacheFirst({ cacheName: 'cesium-static', plugins: [new ExpirationPlugin({ maxEntries: 600, maxAgeSeconds: 30 * 86_400 })] }),
+);
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/models/'),
+  new CacheFirst({ cacheName: 'aircraft-models', plugins: [new ExpirationPlugin({ maxEntries: 80, maxAgeSeconds: 90 * 86_400 })] }),
 );
 registerRoute(({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/api/'), new NetworkOnly());
 

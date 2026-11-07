@@ -2,6 +2,7 @@ import { signal } from '@preact/signals';
 import type { AircraftState } from '../../shared/types';
 import { MotionTrack } from '../motion/smoother';
 import { modelClassFor, type ModelClass } from '../../shared/aircraftTypes';
+import { modelIdFor } from '../../shared/aircraftModels';
 
 export interface LiveAircraft {
   hex: string;
@@ -9,6 +10,8 @@ export interface LiveAircraft {
   state: AircraftState;
   motion: MotionTrack;
   modelClass: ModelClass;
+  /** 3D model for this aircraft's ICAO type (see shared/aircraftModels). */
+  modelId: string;
   /** Client time of the last ingested fix. */
   lastUpdate: number;
   firstSeen: number;
@@ -42,7 +45,8 @@ export class AircraftStore {
       let a = this.map.get(s.hex);
       const fixT = Math.min(this.toClient(s.posTs), now);
       if (!a) {
-        a = { hex: s.hex, state: s, motion: new MotionTrack(), modelClass: modelClassFor(s.type, s.category), lastUpdate: now, firstSeen: now };
+        const modelClass = modelClassFor(s.type, s.category);
+        a = { hex: s.hex, state: s, motion: new MotionTrack(), modelClass, modelId: modelIdFor(s.type, modelClass), lastUpdate: now, firstSeen: now };
         this.map.set(s.hex, a);
         changed = true;
       } else if (s.posTs < a.state.posTs) {
@@ -50,7 +54,10 @@ export class AircraftStore {
       } else {
         // Keep enrichment fields if this report lacks them.
         a.state = { ...a.state, ...stripUndefined(s) };
-        if (!a.state.type && s.type) a.modelClass = modelClassFor(s.type, s.category);
+        if (!a.state.type && s.type) {
+          a.modelClass = modelClassFor(s.type, s.category);
+          a.modelId = modelIdFor(s.type, a.modelClass);
+        }
         a.lastUpdate = now;
       }
       a.motion.update(

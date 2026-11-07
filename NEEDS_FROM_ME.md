@@ -154,6 +154,19 @@ public values go in `.env.local` (frontend) or `worker/wrangler.toml` `[vars]`.
 - Buy a domain, add it to the Pages project (Pages → Custom domains), add it to `ALLOWED_ORIGINS`, the Google API key
   referrer list, the Cesium ion token's allowed URLs, Supabase redirect URLs and the Razorpay webhook URL.
 
+## 16. Licensed photoreal aircraft models (optional, any time)
+- The app ships its own type-accurate models (one per ICAO type, see DECISIONS D-029). If you want photo-quality
+  aircraft, get models whose licence allows use in a commercial app — **not** CC-BY-NC, "editorial use only", or
+  models with real airline logos unless you have the airline's permission. Good sources: Sketchfab (filter
+  *Downloadable* + licence *CC BY* or *CC0*), or paid stores (CGTrader / TurboSquid "Royalty Free" licence). Prefer
+  white/"house" liveries: the app paints the tail per airline only on its generated models.
+- Keep each model light (≤ 20k triangles and ≤ 2 MB after compression) — up to 16 are drawn at once on a phone.
+- For each model: download the `.glb`/`.gltf` (Draco off), open it in https://gltf-viewer.donmccurdy.com to see which
+  axis the nose points along, then run e.g.
+  `npm run models:import -- --file ~/Downloads/a320.glb --id a320-photo --types A320,A20N --name "Airbus A320" --licence CC-BY-4.0 --author "Author Name" --url <model page> --forward -z --up +y`
+  (add `--gear-node <name>` if the gear is a separate node, so it retracts in flight).
+- CC-BY models need visible credit: add the author + licence line to `public/legal/sources.html` (the script reminds you).
+
 ## 15. Satellite imagery key (before charging money)
 - The satellite fallback layer uses Esri World Imagery, which works without a key for development and non-commercial
   use. For a paid product: create an ArcGIS Location Platform account (https://location.arcgis.com, free tier

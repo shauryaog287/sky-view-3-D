@@ -32,8 +32,9 @@ export default defineConfig(({ mode }) => ({
       injectManifest: {
         // The main chunk contains CesiumJS (~4 MB); the shell is useless without it.
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,glb}'],
-        globIgnores: ['cesiumStatic/**', '**/*.map'],
+        // Aircraft models (one per type, ~100 KB each) are cached on first use instead of precached.
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        globIgnores: ['cesiumStatic/**', 'models/**', '**/*.map'],
       },
       manifest: {
         name: 'SkyView 3D — live flights in 3D',

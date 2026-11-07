@@ -1,3 +1,4 @@
+import { modelIdFor } from '../../shared/aircraftModels';
 import { ArcType, Color, Material, PolylineCollection, Cartesian3, type Polyline, type Viewer } from 'cesium';
 import { effect } from '@preact/signals';
 import { HermiteTrack } from '../motion/hermite';
@@ -80,6 +81,7 @@ export class ReplayController {
         state: { ...(live?.state ?? { lat: pts[0].lat, lon: pts[0].lon, onGround: false, posTs: pts[0].ts, seenTs: pts[0].ts, source: 'fixture' }), hex: id },
         motion,
         modelClass: live?.modelClass ?? 'generic',
+        modelId: live?.modelId ?? modelIdFor(undefined, 'generic'),
         lastUpdate: Number.MAX_SAFE_INTEGER / 2,
         firstSeen: nowMs(),
       };

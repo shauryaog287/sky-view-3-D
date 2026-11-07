@@ -73,6 +73,15 @@ export class SceneController {
     this.cameras = new CameraRig(this.viewer, this.aircraft);
     this.sky = new SkyController(this.viewer, this.baseLayers);
     this.alerts = new AlertMonitor(this.phases);
+    // Landing gear: down on the ground, retracted shortly after takeoff, lowered again below ~2000 ft on approach.
+    this.aircraft.models.gearDown = (f) => {
+      if (f.pose.altFt === null) return true;
+      const t = this.phases.get(f.a.hex);
+      if (!t?.ref) return false;
+      const agl = f.height - this.ground.groundM(t.ref);
+      if (t.phase === 'takeoff_roll' || t.phase === 'climb') return agl < 120;
+      return (t.phase === 'approach' || t.phase === 'landing' || t.phase === 'descent') && agl < 600;
+    };
     this.replay = new ReplayController(this.viewer, aircraftStore, this.cameras, (altFt, lat, lon) => {
       const near = this.phases.airportIndex?.nearest(lat, lon, 40_000)?.airport;
       if (altFt === null) return near ? this.ground.groundM(near) : 0;

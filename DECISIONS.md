@@ -267,3 +267,29 @@ Short architecture decision records. Newest decisions are appended at the bottom
 - The **tower camera now stands in the real control tower** (OSM position) when the scenery is loaded. On imagery
   layers its narrowest field of view is 34° (flat imagery smears when zoomed at grazing angles); 10° with Google tiles.
 - Painted runway strips are only drawn on the offline globe; with imagery the real runway is visible.
+
+## D-029 · Per-type aircraft models (generated) + a drop-in path for licensed photoreal ones
+- **Every common ICAO type gets its own model** (53 models covering 218 designators, `shared/aircraftModels.json`):
+  A319/A320/A321 ceo + neo, A220-100/300, 737-700/800/900, 737 MAX 7/8/9, 757, 767, 777-200/200LR/300ER/9,
+  787-8/9/10, 747-400/8, A330-200/300/900, A340-300/600, A350-900/1000, A380, E175/E190/E195, CRJ200/700/900,
+  ERJ-145, MD-80, 717, ATR 42/72, Dash 8-400, PC-12, King Air, three bizjet sizes, a helicopter and two light aircraft.
+  Unknown types fall back to a representative model of their class (A320neo, 777-300ER, E190, ATR 72, …).
+- **Why generated, not downloaded:** freely licensed photoreal airliner models with clear licences are rare, usually
+  CC-BY-NC or editorial-only, often carry real airline liveries and trademarks, and weigh 5–50 MB each. Instead
+  `scripts/build-models.ts` builds each type from public dimensions (length, span, fuselage width/height ratio, wing
+  sweep/dihedral/kink, engine diameter and position, tail size, gear track and wheel count, door positions):
+  nose profile and cockpit windscreen per manufacturer family (A350 "mask", 787 swept side windows, 747 upper deck),
+  cabin windows and door outlines painted in a per-type UV texture, NACA-section wings with the right tip device
+  (fences, sharklets, blended / split-scimitar / canted winglets, raked tips), turbofans with open inlets, fan face,
+  spinner and exhaust cones, turboprops with 4/6-blade propellers, rear-mounted engines and T-tails where applicable,
+  and multi-wheel bogies (4-wheel 787/A330, 6-wheel 777/A350-1000, A380/747 body gear). Original work → CC0.
+- **Airline colours without trademarks:** tail and winglets carry a `_LIVERY` vertex attribute; a per-model
+  `CustomShader` mixes in the operator's brand colour from `shared/airlines.ts` (IndiGo indigo, Air India red, …).
+  No logos or names are painted, so nothing impersonates an airline.
+- **Landing gear is a separate glTF node** hidden in flight: down on the ground, retracted ~120 m after takeoff,
+  lowered again below ~600 m AGL on approach/landing (from the phase tracker).
+- **Size:** quantized + `EXT_meshopt_compression` (decoded natively by Cesium): ~100 KB per model, ~40 KB gzipped;
+  models are versioned by content hash and cached on first use by the service worker (not precached).
+- **Photoreal upgrade path:** `npm run models:import` re-orients, scales to the real length, compresses and registers
+  any licensed glTF (CC-BY, CC0 or purchased) for chosen ICAO types; imported models take precedence and the licence +
+  author are written to `ASSETS_LICENSES.md`. Choosing and licensing such models is a human task (NEEDS_FROM_ME §16).

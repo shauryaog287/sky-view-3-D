@@ -47,7 +47,7 @@ npm run dev                                      # frontend on http://localhost:
 | Replay | `src/motion/hermite.ts`, `src/scene/replay.ts` | 60 min from D1 track points |
 | Alerts | `shared/alertRules.ts`, `worker/src/alerts/`, `worker/src/push/webpush.ts` | cron + Web Push (RFC 8291) |
 | Auth & billing | `worker/src/auth.ts`, `worker/src/billing/` | Supabase JWT, Razorpay (test mode only), Stripe stub |
-| Aircraft models | `scripts/build-models.ts` → `public/models/*.glb` | generated, CC0 |
+| Aircraft models | `scripts/build-models.ts` → `public/models/types/*.glb`, `shared/aircraftModels.json` | one model per ICAO type (53), airline tail colour, retracting gear; `npm run models:import` for licensed photoreal models |
 
 Docs: [PLAN.md](PLAN.md) · [PROGRESS.md](PROGRESS.md) · [DECISIONS.md](DECISIONS.md) ·
 [NEEDS_FROM_ME.md](NEEDS_FROM_ME.md) · [ASSETS_LICENSES.md](ASSETS_LICENSES.md) · [docs/android-twa.md](docs/android-twa.md)

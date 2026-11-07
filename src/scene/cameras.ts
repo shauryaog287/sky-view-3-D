@@ -10,7 +10,7 @@ import {
 } from 'cesium';
 import type { AircraftLayer, FrameAircraft } from './aircraftLayer';
 import type { CameraMode } from '../state/selection';
-import { CLASS_SIZE } from '../../shared/aircraftTypes';
+import { modelEntry } from '../../shared/aircraftModels';
 import { angleDiff, clamp, norm360 } from '../../shared/geo';
 import { aircraftModelMatrix } from './orientation';
 
@@ -79,7 +79,7 @@ export class CameraRig {
       return;
     }
     this.pendingSince = undefined;
-    const size = CLASS_SIZE[f.a.modelClass];
+    const size = modelEntry(f.a.modelId);
     if (changingTarget || !this.chaseRange) this.chaseRange = Math.max(80, size.length * 3.2);
     this.setControls(mode);
     this.resetFov();
@@ -211,7 +211,7 @@ export class CameraRig {
 
   private cockpit(f: FrameAircraft) {
     const camera = this.viewer.camera;
-    const size = CLASS_SIZE[f.a.modelClass];
+    const size = modelEntry(f.a.modelId);
     this.layer.models?.hidden.add(f.a.hex);
     aircraftModelMatrix(f.position, f.pose.heading, f.pose.pitch, f.pose.roll, scratchMat);
     // Eye point: near the nose, about one fuselage height above the gear.
@@ -239,7 +239,7 @@ export class CameraRig {
     camera.setView({ destination: g.position, orientation: { direction: dir, up: trueUp } });
     // Zoom like a spotter's camera: frame the aircraft, but never narrower than 10° so the horizon stays in view.
     const dist = Cartesian3.distance(g.position, f.position);
-    const size = CLASS_SIZE[f.a.modelClass].length;
+    const size = modelEntry(f.a.modelId).length;
     const fr = camera.frustum;
     if (fr instanceof PerspectiveFrustum) {
       fr.fov = clamp(2 * Math.atan((size * 3) / Math.max(1, dist)), CesiumMath.toRadians(this.minGroundFovDeg), DEFAULT_FOV);
