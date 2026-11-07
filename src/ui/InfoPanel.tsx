@@ -4,7 +4,7 @@ import { cameraMode, followHex, pinnedHexes, selectedHex, uiTick } from '../stat
 import { flightInfo, ensureFlightInfo } from '../state/flightInfo';
 import { useFeature } from '../state/entitlements';
 import { follow, selectAircraft, stopFollow, togglePin } from '../state/actions';
-import { flightPhases, PHASE_LABEL } from '../state/phases';
+import { flightPhases, flightRunways, PHASE_LABEL, type RunwayLabel } from '../state/phases';
 import { isAirportPhase } from '../../shared/phase';
 import { openReplay, replay } from '../state/replay';
 import { openAlertSheet } from '../state/alerts';
@@ -88,6 +88,7 @@ export function InfoPanel() {
 
       <div class="chips">
         {phase && <span class={`chip phase-${phase}`}>{PHASE_LABEL[phase]}</span>}
+        {flightRunways.value[a.hex] && <RunwayChip r={flightRunways.value[a.hex]} />}
         <span class={`chip fresh-${fresh}`} title="Positions between updates are estimated from speed, track and climb rate" data-testid="data-age">
           <span class="dot" aria-hidden="true" />
           {fresh === 'live' ? 'Live' : fresh === 'estimated' ? 'Estimated' : 'Stale'} · {fmtAge(ageMs)} old
@@ -217,6 +218,23 @@ function WeatherChip({ w }: { w: WeatherInfo }) {
   return (
     <span class="chip" title={m?.raw ?? w.sources.join(', ')} data-testid="weather-chip">
       ☁ {parts.join(' · ')}
+    </span>
+  );
+}
+
+const RUNWAY_SOURCE: Record<RunwayLabel['source'], string> = {
+  aligned: 'Lined up with this runway',
+  traffic: 'Runway in use — learned from other aircraft landing and taking off',
+  wind: 'Expected from the wind (no recent traffic seen)',
+  geometry: 'Best guess from the approach direction',
+};
+
+function RunwayChip({ r }: { r: RunwayLabel }) {
+  const sure = r.source === 'aligned';
+  return (
+    <span class={`chip runway ${sure ? '' : 'guess'}`} title={RUNWAY_SOURCE[r.source]} data-testid="runway-chip">
+      {r.kind === 'arr' ? '↘' : '↗'} {r.airport} RWY {r.ident}
+      {!sure && <span class="subtle"> · {r.source === 'traffic' ? 'in use' : 'expected'}</span>}
     </span>
   );
 }

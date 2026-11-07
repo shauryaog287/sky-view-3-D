@@ -59,6 +59,8 @@ test('approach detection offers tower and runway cameras', async ({ page }) => {
   await expect(page.getByTestId('info-panel')).toBeVisible();
   // Scripted arrival: phase detection should report approach (or landing/ground late in its loop).
   await expect(page.getByTestId('info-panel')).toContainText('On approach', { timeout: 15_000 });
+  // Lined up with Delhi runway 28 (the scripted approach), so the runway is known for certain.
+  await expect(page.getByTestId('runway-chip')).toContainText('DEL RWY 28');
   await page.getByTestId('cam-tower').click();
   await expect(page.getByTestId('cam-tower')).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId('cam-runway').click();

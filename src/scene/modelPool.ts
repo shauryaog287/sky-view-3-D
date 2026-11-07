@@ -1,4 +1,4 @@
-import { Cartesian3, Color, ColorBlendMode, CustomShader, Model, ShadowMode, UniformType, type Scene } from 'cesium';
+import { Cartesian3, Color, CustomShader, Model, ShadowMode, UniformType, type Scene } from 'cesium';
 import { airlineFromCallsign } from '../../shared/airlines';
 import { modelEntry, modelUrl } from '../../shared/aircraftModels';
 import type { FrameAircraft } from './aircraftLayer';
@@ -111,18 +111,14 @@ export class ModelPool {
     return shown;
   }
 
-  /** Operator colour on the tail (generated models) or a light tint (imported models without the livery attribute). */
+  /** Operator colour on the tail of generated models. Imported models keep their own textures untouched. */
   private paint(slot: Slot, f: FrameAircraft) {
+    if (!slot.shader) return;
     const color = airlineFromCallsign(f.a.state.callsign)?.color;
-    if (slot.shader) {
-      if (slot.livery === color) return;
-      slot.livery = color;
-      slot.shader.setUniform('u_livery', color ? linear(color) : WHITE);
-      slot.shader.setUniform('u_liveryOn', color ? 1 : 0);
-    } else {
-      slot.model.color = color ? Color.fromCssColorString(color) : Color.WHITE;
-      slot.model.colorBlendAmount = color ? 0.18 : 0;
-    }
+    if (slot.livery === color) return;
+    slot.livery = color;
+    slot.shader.setUniform('u_livery', color ? linear(color) : WHITE);
+    slot.shader.setUniform('u_liveryOn', color ? 1 : 0);
   }
 
   private setGear(slot: Slot, down: boolean) {
@@ -156,7 +152,6 @@ export class ModelPool {
       url: modelUrl(entry),
       minimumPixelSize: 28,
       maximumScale: 600,
-      colorBlendMode: ColorBlendMode.MIX,
       shadows: ShadowMode.DISABLED,
       show: false,
       customShader: shader,

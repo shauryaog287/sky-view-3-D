@@ -519,6 +519,16 @@ select {
 .fresh-stale {
   color: var(--red);
 }
+.chip.runway {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.chip.runway.guess {
+  border-style: dashed;
+}
+.chip .subtle {
+  color: var(--text-dim);
+}
 .chip.danger {
   color: #fff;
   background: rgba(255, 92, 108, 0.35);

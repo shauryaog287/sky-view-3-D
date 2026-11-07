@@ -25,7 +25,8 @@ import { cameraMode, followHex, selectedHex } from '../state/selection';
 import { canUseFeature, featureContext } from '../state/entitlements';
 import { flightInfo } from '../state/flightInfo';
 import { loadAirports } from '../data/airports';
-import { FT_TO_M } from '../../shared/geo';
+import { FT_TO_M, haversineM } from '../../shared/geo';
+import { focusWeather } from '../state/weather';
 import { towerViewpoint, runwayViewpoint } from '../../shared/airportPresets';
 import type { FlightPhase } from '../../shared/types';
 import type { Airport } from '../../shared/airports';
@@ -73,6 +74,12 @@ export class SceneController {
     this.cameras = new CameraRig(this.viewer, this.aircraft);
     this.sky = new SkyController(this.viewer, this.baseLayers);
     this.alerts = new AlertMonitor(this.phases);
+    // Wind for the runway-in-use guess when no traffic has been seen yet (weather is fetched for the focus point).
+    this.phases.windAt = (ap) => {
+      const w = focusWeather.value?.info;
+      if (!w || w.windDir === undefined || w.windKt === undefined) return undefined;
+      return haversineM(w.lat, w.lon, ap.lat, ap.lon) < 40_000 ? { dir: w.windDir, kt: w.windKt } : undefined;
+    };
     // Landing gear: down on the ground, retracted shortly after takeoff, lowered again below ~2000 ft on approach.
     this.aircraft.models.gearDown = (f) => {
       if (f.pose.altFt === null) return true;
@@ -236,7 +243,8 @@ export class SceneController {
     }
     if ((next === 'approach' || next === 'takeoff_roll') && hex === followHex.value && !this.suggested.has(`${hex}:${next}`)) {
       this.suggested.add(`${hex}:${next}`);
-      const where = t?.runway ? ` at ${t.runway.airport.iata ?? t.runway.airport.ident}` : '';
+      const r = t?.assigned ?? t?.runway;
+      const where = r ? ` at ${r.airport.iata ?? r.airport.ident}${t?.assigned ? ` (runway ${t.assigned.end.ident})` : ''}` : '';
       const label = a?.state.callsign ?? hex.toUpperCase();
       toast(
         next === 'approach'
@@ -258,11 +266,13 @@ export class SceneController {
   prepareGroundCamera(hex: string, mode: 'tower' | 'runway'): boolean {
     this.phases.tick();
     const t = this.phases.get(hex);
-    const m = t?.runway;
+    // The runway the aircraft is landing on / departing from (lined up, or the runway in use), else the nearest match.
+    const m = t?.assigned ?? t?.runway;
+    const pose = aircraftStore.get(hex)?.motion.sample(nowMs());
     // 40 km covers a full ILS final (intercepts are typically 10–18 NM out).
-    if (!t || !m || m.distToEndM > 40_000) return false;
-    const arrival = t.phase === 'approach' || t.phase === 'landing' || t.phase === 'descent';
-    // m.end is the runway end aligned with the aircraft's track: the landing threshold, or the end it departs from.
+    if (!t || !m || !pose || haversineM(pose.lat, pose.lon, m.end.lat, m.end.lon) > 40_000) return false;
+    const arrival = t.assigned ? t.assigned.kind === 'arr' : t.phase === 'approach' || t.phase === 'landing' || t.phase === 'descent';
+    // m.end is the landing threshold, or the end the takeoff starts from.
     const vp = mode === 'tower' ? towerViewpoint(m.airport, m.runway, m.end) : runwayViewpoint(m.airport, m.runway, m.end, arrival ? 'arrival' : 'departure');
     const groundAtVp = this.ground.groundM(m.airport, vp.elevFt);
     const position = Cartesian3.fromDegrees(vp.lon, vp.lat, groundAtVp + vp.heightAglM);

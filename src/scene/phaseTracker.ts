@@ -1,15 +1,21 @@
 import { detectPhase, type PhaseMemory } from '../../shared/phase';
 import type { RunwayMatch, AirportIndex, Airport } from '../../shared/airports';
 import type { FlightPhase } from '../../shared/types';
-import { lerp } from '../../shared/geo';
+import { haversineM, lerp } from '../../shared/geo';
+import { RunwayUsage, type RunwayAssignment } from '../../shared/runwayUsage';
 import type { AircraftStore, LiveAircraft } from '../state/aircraftStore';
-import { flightPhases } from '../state/phases';
+import { flightPhases, flightRunways, type RunwayLabel } from '../state/phases';
 import type { GroundHeights } from './ground';
 import { nowMs } from '../state/aircraftStore';
 
 export interface TrackedPhase {
   phase: FlightPhase;
+  /** Best geometric runway match (whatever runway the aircraft is closest to being aligned with). */
   runway?: RunwayMatch;
+  /** The runway this aircraft is landing on / departing from (see shared/runwayUsage.ts). */
+  assigned?: RunwayAssignment;
+  /** When it last touched down (so a taxi-in is not mistaken for a departure). */
+  landedAt?: number;
   /** Airport whose ground reference is used for this aircraft's render height. */
   ref?: Airport;
   aglFt?: number;
@@ -30,6 +36,10 @@ export class PhaseTracker {
   private timer?: ReturnType<typeof setInterval>;
   private airports?: AirportIndex;
   private readonly listeners = new Set<PhaseListener>();
+  /** Runway-in-use model, learned from every aircraft's landings and takeoffs. */
+  readonly usage = new RunwayUsage();
+  /** Surface wind at an airport, when known (from the weather layer). */
+  windAt?: (airport: Airport) => { dir: number; kt: number } | undefined;
 
   constructor(
     private readonly store: AircraftStore,
@@ -65,13 +75,20 @@ export class PhaseTracker {
     if (!this.airports) return;
     const changed: Record<string, FlightPhase> = {};
     let any = false;
+    const runways: Record<string, RunwayLabel> = {};
+    let runwaysChanged = false;
     for (const a of this.store.map.values()) {
       const t = this.evaluate(a, now);
       if (t && flightPhases.value[a.hex] !== t.phase) {
         changed[a.hex] = t.phase;
         any = true;
       }
+      const label = t?.assigned && runwayLabel(t.assigned);
+      if (label) runways[a.hex] = label;
+      const old = flightRunways.value[a.hex];
+      if (old?.ident !== label?.ident || old?.airport !== label?.airport || old?.source !== label?.source) runwaysChanged = true;
     }
+    if (runwaysChanged || Object.keys(flightRunways.value).length !== Object.keys(runways).length) flightRunways.value = runways;
     for (const hex of this.tracked.keys()) if (!this.store.map.has(hex)) this.tracked.delete(hex);
     if (any || Object.keys(flightPhases.value).length !== this.tracked.size) {
       const next: Record<string, FlightPhase> = {};
@@ -108,10 +125,42 @@ export class PhaseTracker {
       memory: r.memory,
       targetOffsetM,
       offsetM: prev?.offsetM ?? targetOffsetM,
+      landedAt: prev?.landedAt,
     };
+    if (prev?.phase === 'landing' && r.phase === 'ground') t.landedAt = now;
+    t.assigned = this.assignRunway(a.hex, t, prev, { lat: pose.lat, lon: pose.lon }, now);
     this.tracked.set(a.hex, t);
     if (prev?.phase !== t.phase) for (const l of this.listeners) l(a.hex, prev?.phase, t.phase, t);
     return t;
+  }
+
+  /**
+   * Record what the aircraft is doing on a runway (feeds the runway-in-use model) and decide which runway it uses:
+   * aligned on final / rolling → that runway; descending towards an airport → the arrival runway in use; taxiing out
+   * → the departure runway in use; climbing out → keep the runway it took off from.
+   */
+  private assignRunway(hex: string, t: TrackedPhase, prev: TrackedPhase | undefined, pos: { lat: number; lon: number }, now: number): RunwayAssignment | undefined {
+    const m = t.runway;
+    const fromMatch = (kind: 'arr' | 'dep'): RunwayAssignment | undefined =>
+      m && { airport: m.airport, runway: m.runway, end: m.end, far: m.far, kind, source: 'aligned' };
+    const established = !!m && m.headingDiff < 15 && Math.abs(m.crossM) < 600 && m.alongM > -20_000;
+    if ((t.phase === 'approach' || t.phase === 'landing') && established) {
+      if (t.phase === 'landing' || m!.alongM > -10_000) this.usage.record(m!.airport, hex, m!.end, 'arr', now);
+      return fromMatch('arr');
+    }
+    if (t.phase === 'takeoff_roll' && m?.onRunway) {
+      this.usage.record(m.airport, hex, m.end, 'dep', now);
+      return fromMatch('dep');
+    }
+    if (t.phase === 'climb' && prev?.assigned?.kind === 'dep' && (t.aglFt ?? 0) < 4000) return prev.assigned;
+    if (t.phase === 'ground' && prev?.assigned?.kind === 'arr' && prev.assigned.source === 'aligned' && t.landedAt && now - t.landedAt < 120_000) return prev.assigned;
+    const ref = t.ref;
+    if (!ref || ref.kind === 'S' || !ref.runways.length) return undefined;
+    const near = haversineM(pos.lat, pos.lon, ref.lat, ref.lon);
+    const wind = this.windAt?.(ref);
+    if ((t.phase === 'descent' || t.phase === 'approach') && near < 60_000) return this.usage.assign(ref, 'arr', now, { wind, from: pos });
+    if (t.phase === 'ground' && near < 6_000 && (!t.landedAt || now - t.landedAt > 20 * 60_000)) return this.usage.assign(ref, 'dep', now, { wind, from: pos });
+    return undefined;
   }
 
   /** Render-height offset for an aircraft (blends towards the target ~30 %/s). Called every frame. */
@@ -121,4 +170,8 @@ export class PhaseTracker {
     t.offsetM = lerp(t.offsetM, t.targetOffsetM, Math.min(1, dtS * 0.6));
     return t.offsetM;
   }
+}
+
+function runwayLabel(a: RunwayAssignment): RunwayLabel {
+  return { ident: a.end.ident, airport: a.airport.iata ?? a.airport.ident, kind: a.kind, source: a.source };
 }

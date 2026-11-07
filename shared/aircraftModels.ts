@@ -24,21 +24,32 @@ export interface ModelEntry {
   licence?: string;
   author?: string;
   url?: string;
+  /** Airline ICAO code when this is an airline-specific replica. */
+  airline?: string;
 }
 
 export interface ModelManifest {
   v: 1;
   models: Record<string, ModelEntry>;
+  /** ICAO type designator → model. */
   types: Record<string, string>;
   classes: Record<ModelClass, string>;
+  /** Airline-specific replicas (licensed livery models): airline ICAO code → type designator → model. */
+  liveries?: Record<string, Record<string, string>>;
 }
 
 const manifest = manifestJson as unknown as ModelManifest;
 
-export function modelIdFor(type: string | undefined, cls: ModelClass): string {
+/** Model for an aircraft: the operator's own replica of this type, else the type's model, else the class model. */
+export function resolveModel(m: ModelManifest, type: string | undefined, cls: ModelClass, airline?: string): string {
   const t = type?.toUpperCase();
-  const id = (t && manifest.types[t]) || manifest.classes[cls] || manifest.classes.generic;
-  return manifest.models[id] ? id : manifest.classes.generic;
+  const own = t && airline ? m.liveries?.[airline.toUpperCase()]?.[t] : undefined;
+  const id = (own && m.models[own] && own) || (t && m.types[t]) || m.classes[cls] || m.classes.generic;
+  return m.models[id] ? id : m.classes.generic;
+}
+
+export function modelIdFor(type: string | undefined, cls: ModelClass, airline?: string): string {
+  return resolveModel(manifest, type, cls, airline);
 }
 
 export function modelEntry(id: string): ModelEntry {

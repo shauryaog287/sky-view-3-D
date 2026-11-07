@@ -23,7 +23,7 @@ public values go in `.env.local` (frontend) or `worker/wrangler.toml` `[vars]`.
 | 5, 12 | Commercial weather + **licensed flight data** | Charging money | Before `LAUNCH_MODE=freemium` |
 | 13 | Google Play developer account + billing decision | Android app | Later |
 | 15 | ArcGIS key for the satellite layer | Commercial use of the satellite fallback | Before charging money |
-| 16 | Licensed photoreal aircraft models (optional) | Photo-quality aircraft instead of generated ones | Any time |
+| 16 | Replica models: trademark decision, source + budget, the files | Photo-quality aircraft in each operator's livery | When you want replicas |
 
 ## 1. Cloudflare account (required to deploy)
 1. Sign up at https://dash.cloudflare.com/sign-up (free plan is enough to start; Durable Objects with SQLite storage
@@ -154,18 +154,32 @@ public values go in `.env.local` (frontend) or `worker/wrangler.toml` `[vars]`.
 - Buy a domain, add it to the Pages project (Pages → Custom domains), add it to `ALLOWED_ORIGINS`, the Google API key
   referrer list, the Cesium ion token's allowed URLs, Supabase redirect URLs and the Razorpay webhook URL.
 
-## 16. Licensed photoreal aircraft models (optional, any time)
-- The app ships its own type-accurate models (one per ICAO type, see DECISIONS D-029). If you want photo-quality
-  aircraft, get models whose licence allows use in a commercial app — **not** CC-BY-NC, "editorial use only", or
-  models with real airline logos unless you have the airline's permission. Good sources: Sketchfab (filter
-  *Downloadable* + licence *CC BY* or *CC0*), or paid stores (CGTrader / TurboSquid "Royalty Free" licence). Prefer
-  white/"house" liveries: the app paints the tail per airline only on its generated models.
-- Keep each model light (≤ 20k triangles and ≤ 2 MB after compression) — up to 16 are drawn at once on a phone.
-- For each model: download the `.glb`/`.gltf` (Draco off), open it in https://gltf-viewer.donmccurdy.com to see which
-  axis the nose points along, then run e.g.
-  `npm run models:import -- --file ~/Downloads/a320.glb --id a320-photo --types A320,A20N --name "Airbus A320" --licence CC-BY-4.0 --author "Author Name" --url <model page> --forward -z --up +y`
-  (add `--gear-node <name>` if the gear is a separate node, so it retracts in flight).
-- CC-BY models need visible credit: add the author + licence line to `public/legal/sources.html` (the script reminds you).
+## 16. Real aircraft replicas (operator liveries) — decisions, budget, files
+The app already assigns every flight its exact type and operator from live data (DECISIONS D-029/D-030). Photo-quality
+replicas need artist-made 3D models. I can't make those, and the realistic ones have to be licensed. What I need:
+
+1. **Decision on trademarks (legal, before launch).** Real airline liveries and logos are the airlines' trademarks.
+   Using them to show which aircraft a real flight is may be acceptable, but get a lawyer's view before a public or
+   paid launch. Ask them to include it in the §11 review. The other option is written permission from each airline.
+   Until then the app uses brand colours only.
+2. **Source and budget (pick one, or mix):**
+   - *Commission* (best quality and full rights): a 3D artist builds one game-ready model per type (≤ 30k triangles,
+     PBR textures, gear as a separate node), plus one livery texture per operator. Find one on ArtStation, Upwork or
+     Fiverr ("game-ready airliner"). Ask for a buy-out licence that allows use in a commercial app. Prices vary a lot;
+     get quotes. The India list in `docs/india-rollout.md` is about 17 types and about 35 operator liveries.
+   - *Buy ready-made*: CGTrader / TurboSquid. Use the "Royalty Free" licence only. Models with real logos are usually
+     sold as **editorial use only**, which does not cover an app.
+   - *Free*: Sketchfab models under **CC BY** or **CC0** (not NC/ND). Quality and coverage are hit-and-miss.
+     Credit is required. If you want me to search and download, create a free Sketchfab account and give me an API
+     token (Sketchfab → Settings → Password & API → API token) as a secret. Or download the files yourself and send
+     them to me.
+3. **The files.** `.glb` or `.gltf` (no Draco compression), with the licence/receipt and the author's name. For each
+   one I run, for example:
+   `npm run models:import -- --file a20n-indigo.glb --id a20n-igo --types A20N --airlines IGO --name "IndiGo A320neo" --licence "<licence>" --author "<name>" --url "<page or invoice>"`
+   `--airlines IGO` makes it IndiGo-only; leave it out for a white/house model used by every operator of the type.
+   The script orients and scales the model to the real length, compresses it, and records the licence in
+   ASSETS_LICENSES.md. CC-BY credits also go on `public/legal/sources.html`.
+- Keep each model light: ≤ 30k triangles and ≤ 3 MB after compression. Up to 16 are drawn at once on a phone.
 
 ## 15. Satellite imagery key (before charging money)
 - The satellite fallback layer uses Esri World Imagery, which works without a key for development and non-commercial

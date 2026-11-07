@@ -41,6 +41,7 @@ npm run dev                                      # frontend on http://localhost:
 | Shared cache / rate limits | `worker/src/flights/flightService.ts` | grid buckets, 3 s cache, token buckets, 429 backoff, merge by hex |
 | Smooth motion | `src/motion/smoother.ts` | dead reckoning + projective velocity blending (see DECISIONS D-010) |
 | Phase detection | `shared/phase.ts` | ground → takeoff roll → climb → cruise → descent → approach → landing |
+| Runway assignment | `shared/runwayUsage.ts` | lined up → runway in use (learned from traffic) → wind → geometry |
 | Cameras | `src/scene/cameras.ts`, `shared/airportPresets.ts` | chase, orbit, cockpit, tower, runway-end |
 | Base layers | `src/scene/baseLayers.ts` | Google 3D Tiles → Cesium ion → offline globe, with session caps |
 | Weather & sky | `src/scene/sky.ts`, `worker/src/routes/weather.ts` | sun tint, visibility fog, cloud layer from METAR / Open-Meteo |

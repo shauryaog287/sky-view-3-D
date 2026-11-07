@@ -4,23 +4,41 @@
  *
  *   npm run data:airport3d                 # all curated airports
  *   npm run data:airport3d -- VIDP VABB    # selected ones
+ *   npm run data:airport3d -- --india-intl      # every Indian international airport
+ *   npm run data:airport3d -- --india-domestic  # every other Indian airport with airline service
+ *   (airports that already have a file are skipped unless --force)
  *
  * Data © OpenStreetMap contributors, ODbL 1.0 (attribution shown in the app). Uses public Overpass API instances
  * sequentially with pauses; set OVERPASS_URL to use your own.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { convertOsm, overpassQuery, type OsmElement } from '../shared/airport3d';
 import { CURATED_PRESETS, presetFor } from '../shared/airportPresets';
 import { airportIndex } from '../shared/airportData';
+import { INDIA_INTERNATIONAL, indiaDomestic } from '../shared/indiaAirports';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = join(root, 'public', 'airports3d');
 const MIRRORS = (process.env.OVERPASS_URL ?? 'https://maps.mail.ru/osm/tools/overpass/api/interpreter,https://overpass-api.de/api/interpreter').split(',');
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Public Overpass servers are often overloaded (502/503/504): try every mirror, three rounds with growing pauses. */
 async function fetchOsm(icao: string): Promise<OsmElement[]> {
+  let lastErr: unknown;
+  for (let round = 0; round < 3; round++) {
+    if (round) await sleep(20_000 * round);
+    try {
+      return await fetchOnce(icao);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+}
+
+async function fetchOnce(icao: string): Promise<OsmElement[]> {
   const body = new URLSearchParams({ data: overpassQuery(icao) });
   let lastErr: unknown;
   for (const url of MIRRORS) {
@@ -37,11 +55,21 @@ async function fetchOsm(icao: string): Promise<OsmElement[]> {
   throw lastErr;
 }
 
-const wanted = process.argv.slice(2).filter((a) => /^[A-Z0-9]{4}$/i.test(a)).map((a) => a.toUpperCase());
-const list = wanted.length ? wanted : Object.keys(CURATED_PRESETS);
-mkdirSync(outDir, { recursive: true });
+const args = process.argv.slice(2);
+const wanted = args.filter((a) => /^[A-Z0-9]{4}$/i.test(a)).map((a) => a.toUpperCase());
 const airports = airportIndex();
+if (args.includes('--india-intl')) wanted.push(...INDIA_INTERNATIONAL);
+if (args.includes('--india-domestic')) wanted.push(...indiaDomestic(airports).map((a) => a.ident));
+const list = wanted.length ? [...new Set(wanted)] : Object.keys(CURATED_PRESETS);
+mkdirSync(outDir, { recursive: true });
+const force = args.includes('--force');
 for (const icao of list) {
+  if (!force && !wanted.length) {
+    /* curated default run: always refresh */
+  } else if (!force && existsSync(join(outDir, `${icao}.json`))) {
+    console.log(`${icao}: already built (use --force to refresh)`);
+    continue;
+  }
   const ap = airports.get(icao);
   if (!ap) {
     console.warn(`${icao}: not in airports dataset`);

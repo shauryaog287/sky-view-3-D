@@ -80,6 +80,7 @@ for (const def of MODELS) {
 // Keep imported (licensed) models and their type mappings: they take precedence over generated ones.
 for (const [id, m] of Object.entries(prev.models)) if (m.source !== 'generated') manifest.models[id] = m;
 for (const [t, id] of Object.entries(prev.types)) if (prev.models[id] && prev.models[id].source !== 'generated') manifest.types[t] = id;
+if (prev.liveries) manifest.liveries = prev.liveries;
 
 writeFileSync(manifestPath, JSON.stringify(sortKeys(manifest), null, 1) + '\n');
 console.log(`\n${Object.keys(manifest.models).length} models, ${Object.keys(manifest.types).length} type designators${total ? `, ${(total / 1024 / 1024).toFixed(2)} MiB written` : ''}`);
@@ -89,5 +90,5 @@ function round(n: number) {
 }
 function sortKeys(m: ModelManifest): ModelManifest {
   const sort = <T>(o: Record<string, T>) => Object.fromEntries(Object.entries(o).sort(([a], [b]) => a.localeCompare(b)));
-  return { v: m.v, models: sort(m.models), types: sort(m.types), classes: m.classes };
+  return { v: m.v, models: sort(m.models), types: sort(m.types), classes: m.classes, ...(m.liveries ? { liveries: m.liveries } : {}) };
 }

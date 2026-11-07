@@ -6,8 +6,11 @@
  *
  *   npm run models:import -- --file ~/Downloads/a320.glb --id a320-photo --types A320,A20N \
  *     --name "Airbus A320" --licence CC-BY-4.0 --author "Jane Doe" --url https://sketchfab.com/3d-models/... \
- *     [--forward +z] [--up +y] [--length 37.57] [--gear-node Gear]
+ *     [--airlines IGO] [--forward +z] [--up +y] [--length 37.57] [--gear-node Gear]
  *
+ * --airlines: make it an airline-specific replica (that operator's livery): used only for flights whose callsign
+ * belongs to one of these ICAO airline codes (IGO = IndiGo, AIC = Air India, …); others keep the generic model.
+ * Without it, the model replaces the generic one for every operator of these types.
  * --forward / --up: the model's nose and top directions in its own axes (look at it in any glTF viewer). Default
  * +z forward, +y up (the glTF convention); many exports use -z or +x forward.
  * --length: real overall length in metres; the model is scaled to it (default: the type's generated model length).
@@ -41,6 +44,7 @@ const { values: a } = parseArgs({
     up: { type: 'string', default: '+y' },
     length: { type: 'string' },
     'gear-node': { type: 'string' },
+    airlines: { type: 'string' },
   },
 });
 const need = ['file', 'id', 'types', 'name', 'licence', 'author', 'url'] as const;
@@ -51,6 +55,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const manifestPath = join(root, 'shared', 'aircraftModels.json');
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as ModelManifest;
 const types = a.types!.split(',').map((t) => t.trim().toUpperCase()).filter(Boolean);
+const airlines = (a.airlines ?? '').split(',').map((t) => t.trim().toUpperCase()).filter(Boolean);
+for (const al of airlines) if (!/^[A-Z]{3}$/.test(al)) fail(`--airlines takes 3-letter ICAO airline codes (got "${al}")`);
 
 type V = [number, number, number];
 const axis = (s: string): V => {
@@ -127,14 +133,20 @@ manifest.models[a.id!] = {
   licence: a.licence,
   author: a.author,
   url: a.url,
+  ...(airlines.length ? { airline: airlines.join(',') } : {}),
 };
-for (const t of types) manifest.types[t] = a.id!;
+if (airlines.length) {
+  manifest.liveries ??= {};
+  for (const al of airlines) for (const t of types) (manifest.liveries[al] ??= {})[t] = a.id!;
+} else {
+  for (const t of types) manifest.types[t] = a.id!;
+}
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 1) + '\n');
 appendFileSync(
   join(root, 'ASSETS_LICENSES.md'),
-  `| \`public/models/licensed/${a.id}.glb\` (${a.name}; used for ${types.join(', ')}) | ${a.author}, ${a.url} | ${a.licence} | ${/^CC0/i.test(a.licence!) ? 'No' : `Yes: "${a.name}" by ${a.author} (${a.licence}) — listed on the Data sources page`} |\n`,
+  `| \`public/models/licensed/${a.id}.glb\` (${a.name}; used for ${types.join(', ')}${airlines.length ? ` operated by ${airlines.join(', ')}` : ''}) | ${a.author}, ${a.url} | ${a.licence} | ${/^CC0/i.test(a.licence!) ? 'No' : `Yes: "${a.name}" by ${a.author} (${a.licence}) — listed on the Data sources page`} |\n`,
 );
-console.log(`Imported ${a.id}: ${(glb.length / 1024).toFixed(0)} KiB, ${round(b.max[2] - b.min[2])} m long, ${round(b.max[0] - b.min[0])} m span → ${types.join(', ')}`);
+console.log(`Imported ${a.id}: ${(glb.length / 1024).toFixed(0)} KiB, ${round(b.max[2] - b.min[2])} m long, ${round(b.max[0] - b.min[0])} m span → ${types.join(', ')}${airlines.length ? ` (${airlines.join(', ')} only)` : ''}`);
 console.log('Now add the author credit to public/legal/sources.html (CC-BY requires it) and check the model with `npm run dev`.');
 
 function round(n: number) {

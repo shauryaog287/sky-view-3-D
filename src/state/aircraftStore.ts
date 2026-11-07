@@ -3,6 +3,9 @@ import type { AircraftState } from '../../shared/types';
 import { MotionTrack } from '../motion/smoother';
 import { modelClassFor, type ModelClass } from '../../shared/aircraftTypes';
 import { modelIdFor } from '../../shared/aircraftModels';
+import { airlineFromCallsign } from '../../shared/airlines';
+
+const modelFor = (s: AircraftState, cls: ModelClass) => modelIdFor(s.type, cls, airlineFromCallsign(s.callsign)?.icao);
 
 export interface LiveAircraft {
   hex: string;
@@ -46,17 +49,18 @@ export class AircraftStore {
       const fixT = Math.min(this.toClient(s.posTs), now);
       if (!a) {
         const modelClass = modelClassFor(s.type, s.category);
-        a = { hex: s.hex, state: s, motion: new MotionTrack(), modelClass, modelId: modelIdFor(s.type, modelClass), lastUpdate: now, firstSeen: now };
+        a = { hex: s.hex, state: s, motion: new MotionTrack(), modelClass, modelId: modelFor(s, modelClass), lastUpdate: now, firstSeen: now };
         this.map.set(s.hex, a);
         changed = true;
       } else if (s.posTs < a.state.posTs) {
         continue;
       } else {
         // Keep enrichment fields if this report lacks them.
+        const before = a.state;
         a.state = { ...a.state, ...stripUndefined(s) };
-        if (!a.state.type && s.type) {
-          a.modelClass = modelClassFor(s.type, s.category);
-          a.modelId = modelIdFor(s.type, a.modelClass);
+        if (a.state.type !== before.type || a.state.callsign !== before.callsign) {
+          a.modelClass = modelClassFor(a.state.type, a.state.category);
+          a.modelId = modelFor(a.state, a.modelClass);
         }
         a.lastUpdate = now;
       }

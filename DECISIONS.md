@@ -293,3 +293,21 @@ Short architecture decision records. Newest decisions are appended at the bottom
 - **Photoreal upgrade path:** `npm run models:import` re-orients, scales to the real length, compresses and registers
   any licensed glTF (CC-BY, CC0 or purchased) for chosen ICAO types; imported models take precedence and the licence +
   author are written to `ASSETS_LICENSES.md`. Choosing and licensing such models is a human task (NEEDS_FROM_ME §16).
+
+## D-030 · Runway assignment and the India-first rollout
+- **ATC runway assignments are not in public ADS-B data.** The runway each flight uses is inferred
+  (`shared/runwayUsage.ts`), in this order:
+  1. *lined up*: on final within 20 km, ±600 m of the centreline and heading within 15°, or rolling on the runway.
+     This is certain.
+  2. *runway in use*: the ends the airport's recent arrivals/departures actually used (one vote per aircraft,
+     15-minute half-life, forgotten after an hour). This picks up runway changes, and parallel-runway splits such as
+     DEL 29L/29R/28.
+  3. *wind*: strongest headwind component (≥ 5 kt) from the weather layer.
+  4. *geometry*: the straight-in end facing the aircraft.
+  The info panel shows it ("↘ DEL RWY 29L", dashed when it is "in use"/"expected" rather than lined up). The runway
+  and tower cameras use it, so they set up at the right runway before the aircraft lines up.
+- **India first:** `shared/indiaAirports.ts` lists the 39 Indian international airports (static 3D scenery shipped)
+  and derives the ~84 other Indian airports with airline service (built on demand, static on request). International
+  hubs follow. The aircraft replica shopping list is in `docs/india-rollout.md`.
+- Operator-specific replicas: the manifest maps airline + type to a model (`liveries`), so licensed livery models
+  are picked per flight from the callsign; flights without one keep the generated model of their exact type.
