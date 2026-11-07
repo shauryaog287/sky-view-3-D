@@ -1,0 +1,24 @@
+# Local secrets for `npm run dev:api` (copy to worker/.dev.vars — it is git-ignored).
+# Anything left empty simply disables that integration; the app falls back gracefully.
+
+# Use recorded sample data instead of live community feeds (no network needed):
+# PROVIDERS=fixture
+ALLOWED_ORIGINS=*
+
+OPENSKY_CLIENT_ID=
+OPENSKY_CLIENT_SECRET=
+GOOGLE_MAPS_API_KEY=
+CESIUM_ION_TOKEN=
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_JWT_SECRET=
+# Razorpay TEST keys only (rzp_test_...). Never live keys.
+PAYMENTS_ENABLED=false
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
+RAZORPAY_PLAN_MONTHLY=
+RAZORPAY_PLAN_YEARLY=
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:you@example.com

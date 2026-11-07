@@ -3,4 +3,6 @@
 | Asset | Source | Licence | Attribution required |
 | --- | --- | --- | --- |
 | CesiumJS + bundled Natural Earth II imagery | cesium.com / naturalearthdata.com | Apache-2.0 / Public domain | Cesium logo stays in the credit bar |
-| `public/icons/favicon.svg` | Original work for this project | CC0-1.0 | No |
+| `data/airports.json` (airports + runways) | OurAirports, https://ourairports.com/data/ | Public domain | No (credited anyway on the Data Sources page) |
+| `fixtures/adsb-v2/*.json` (recorded ADS-B snapshots) | adsb.lol | ODbL 1.0 | Yes: "Contains data from adsb.lol, available under the ODbL" |
+| `public/icons/favicon.svg`, aircraft silhouettes in `src/scene/icons.ts` | Original work for this project | CC0-1.0 | No |

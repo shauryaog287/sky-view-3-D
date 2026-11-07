@@ -3,6 +3,7 @@ dist/
 dist-mock/
 .wrangler/
 .dev.vars
+worker/.dev.vars
 .env
 .env.*
 !.env.example

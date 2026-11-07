@@ -1,0 +1,58 @@
+# SkyView 3D API — Cloudflare Worker
+# Local:   npm run dev:api            (uses worker/.dev.vars for secrets; copy worker/.dev.vars.example)
+# Deploy:  npm run deploy:api         (see README "Deploy")
+name = "skyview-api"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[observability]
+enabled = true
+
+[vars]
+# "open" = everything free for everyone (launch). "freemium" = pro features need an active subscription.
+LAUNCH_MODE = "open"
+# Optional JSON tier overrides, e.g. '{"replay":"free"}'
+FEATURE_TIERS = ""
+# Ordered provider list. Use "fixture" for offline demo data, "commercial" once a licensed feed is wired up.
+PROVIDERS = "adsblol,airplaneslive,opensky"
+CACHE_TTL_MS = "3000"
+ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,https://skyview-3d.pages.dev"
+# Google Photorealistic 3D Tiles cost guardrails (root sessions per day).
+TILES_MODE = ""                      # "", "google", "ion" or "off" ("" = auto from available keys)
+TILES_SESSIONS_PER_USER_DAY = "20"
+TILES_SESSIONS_GLOBAL_DAY = "3000"
+TRACK_RETENTION_MIN = "120"
+TRACK_MIN_INTERVAL_S = "15"
+ENRICHMENT = "adsbdb"
+OPENSKY_DAILY_CREDITS = "4000"
+COMMERCIAL_PROVIDER = ""
+VAPID_SUBJECT = "mailto:hello@example.com"
+VAPID_PUBLIC_KEY = ""
+SUPABASE_URL = ""
+# Payments stay OFF until you deliberately enable test mode. Never set live keys here.
+PAYMENTS_ENABLED = "false"
+RAZORPAY_KEY_ID = ""
+RAZORPAY_PLAN_MONTHLY = ""
+RAZORPAY_PLAN_YEARLY = ""
+
+[[durable_objects.bindings]]
+name = "FLIGHT_HUB"
+class_name = "FlightHub"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["FlightHub"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "skyview"
+database_id = "00000000-0000-0000-0000-000000000000"   # replace with `wrangler d1 create skyview` output
+migrations_dir = "migrations"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "00000000000000000000000000000000"                 # replace with `wrangler kv namespace create CACHE` output
+
+[triggers]
+crons = ["* * * * *"]
