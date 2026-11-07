@@ -5,10 +5,12 @@ import { BaseLayers } from './baseLayers';
 import { AircraftLayer } from './aircraftLayer';
 import { LiveFeed } from './liveFeed';
 import { ModelPool } from './modelPool';
+import { CameraRig } from './cameras';
 import { env } from '../config/env';
 import { baseLayerStatus } from '../state/store';
 import { aircraftStore, nowMs } from '../state/aircraftStore';
-import { followHex, selectedHex } from '../state/selection';
+import { cameraMode, followHex, selectedHex } from '../state/selection';
+import { toast } from '../state/store';
 
 /**
  * Owns the Cesium scene and every scene subsystem. One instance per page load.
@@ -19,6 +21,7 @@ export class SceneController {
   readonly baseLayers: BaseLayers;
   readonly aircraft: AircraftLayer;
   readonly feed: LiveFeed;
+  readonly cameras: CameraRig;
   private readonly disposers: (() => void)[] = [];
   private handler?: ScreenSpaceEventHandler;
 
@@ -27,10 +30,21 @@ export class SceneController {
     this.baseLayers = new BaseLayers(this.viewer);
     this.baseLayers.onChange((s) => (baseLayerStatus.value = s));
     this.aircraft = new AircraftLayer(this.viewer, aircraftStore);
-    this.aircraft.models = new ModelPool();
+    this.aircraft.models = new ModelPool(this.viewer.scene);
     this.feed = new LiveFeed(this.viewer);
+    this.cameras = new CameraRig(this.viewer, this.aircraft);
 
-    const pre = () => this.aircraft.update(nowMs());
+    const pre = () => {
+      const now = nowMs();
+      this.aircraft.update(now);
+      if (!this.cameras.update(now)) {
+        // The followed aircraft disappeared from the feed (landed and stopped reporting, or out of coverage).
+        followHex.value = null;
+        cameraMode.value = 'free';
+        this.cameras.stop();
+        toast('Lost contact with the followed flight.', 'warn');
+      }
+    };
     this.viewer.scene.preRender.addEventListener(pre);
     this.disposers.push(() => this.viewer.scene.preRender.removeEventListener(pre));
 
@@ -49,6 +63,11 @@ export class SceneController {
       const hex = this.aircraft.pick(e.position);
       selectedHex.value = hex ?? null;
     }, ScreenSpaceEventType.LEFT_CLICK);
+  }
+
+  /** Set up the tower / runway-end camera for an aircraft near an airport. Implemented with airport presets (M4). */
+  prepareGroundCamera(_hex: string, _mode: 'tower' | 'runway'): boolean {
+    return false;
   }
 
   async start() {

@@ -146,6 +146,11 @@ export class AircraftLayer {
   }
 
   private updateLabel(v: Visual, f: FrameAircraft, isSel: boolean, total: number) {
+    // The followed aircraft is right in front of the camera: its label would just cover the model.
+    if (f.a.hex === this.followed && f.dist < 3000) {
+      if (v.label) v.label.show = false;
+      return;
+    }
     const want = isSel || (this.labelsForNearby && f.dist < 60_000 && total < 150) || (this.labelsForNearby && f.dist < 400_000 && total < 25);
     if (!want) {
       if (v.label) v.label.show = false;

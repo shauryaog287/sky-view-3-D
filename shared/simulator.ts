@@ -259,7 +259,8 @@ export function defaultScriptedFlights(airports: AirportIndex): ScriptedFlight[]
       airportIcao: ap.ident,
       end,
       far,
-      periodS: 540,
+      // Loop length ≈ active duration so demo flights are (almost) always on screen.
+      periodS: d.kind === 'arrival' ? 460 : 322,
       offsetS: d.offset,
     });
   });

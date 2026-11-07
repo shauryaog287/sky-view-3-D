@@ -2,7 +2,6 @@
 export interface Env {
   FLIGHT_HUB: DurableObjectNamespace;
   DB?: D1Database;
-  CACHE?: KVNamespace;
   ASSETS?: Fetcher;
 
   // ── Plain vars (wrangler.toml [vars]) ──

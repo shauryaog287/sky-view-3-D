@@ -84,3 +84,34 @@ Short architecture decision records. Newest decisions are appended at the bottom
   consecutive fixes when the feed lacks them; bank = atan(v·ω/g), pitch = flight-path angle + 2.5° AoA bias.
 - Replay uses all-known samples, so it uses cubic Hermite interpolation instead (M6).
 - Server timestamps are converted to the client clock with a smoothed server-offset estimate.
+
+## D-011 · Aircraft models are generated, not downloaded
+- `scripts/build-models.ts` builds 8 low-poly glTF models (narrowbody, widebody, regional, turboprop, bizjet, helicopter,
+  light, generic) from parametric parts: lathed fuselage, tapered diamond-section wings, nacelles, T-tails, prop/rotor
+  discs, landing gear. 14–27 KB each, 280–760 triangles — cheap enough for 40 on screen on a mid-range phone.
+- **Why:** licence certainty (original work, CC0) and zero third-party download dependency. Higher-detail CC-BY models
+  can replace them later by dropping `.glb` files with the same names (record them in ASSETS_LICENSES.md and credit
+  them on the Data Sources page).
+- glTF axes: +Y up, +Z nose. Cesium maps glTF +Z forward to model +X; the model matrix is built explicitly from the
+  local ENU frame (`src/scene/orientation.ts`, unit-tested) rather than relying on HeadingPitchRoll conventions.
+- Airline tint: a 22 % colour MIX from `shared/airlines.ts` brand colours (approximate colours, no logos or liveries).
+
+## D-012 · LOD
+- Every aircraft is a billboard (heading-rotated silhouette, `alignedAxis = UNIT_Z` so "up" points to true north).
+- The nearest N aircraft within 35 km (N by quality: 6/16/40) plus the selected/followed one (up to 400 km) get a glTF
+  model; models are pooled per class and recycled, never destroyed while panning. `minimumPixelSize` keeps a model at
+  least as visible as the billboard it replaces, so the swap is not noticeable.
+
+## D-013 · Caching for enrichment: Cache API + in-isolate LRU, no KV
+- adsbdb airframe lookups are cached 7 days, routes 6 h, unknowns 1 h. Cloudflare's Cache API has no write quota;
+  free-tier KV allows only 1,000 writes/day, which a popular map would exhaust in minutes. The KV binding was removed
+  (one less resource to create). Durable Objects + Cache API cover every caching need.
+- Photos from adsbdb (airport-data.com) are not shown: their licence is unclear.
+
+## D-014 · Follow cameras
+- Chase: `lookAtTransform(ENU(aircraft), HeadingPitchRange(smoothed track, −9° + 0.4·pitch, range))` every frame,
+  heading low-pass filtered (τ ≈ 0.6 s); pinch-zoom changes the range. Orbit: re-anchors the user's current offset on
+  the moving aircraft every frame. Cockpit: eye at the nose from the same model matrix, the aircraft's own model hidden.
+- Entering a follow mode flies to where the aircraft *will be* when the flight ends (motion prediction), so there is no
+  snap at the end. `prefers-reduced-motion` skips the flight.
+- Feed polling is debounced and never aborted by camera movement (follow cameras move every frame).

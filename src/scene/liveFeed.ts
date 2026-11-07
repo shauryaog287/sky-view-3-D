@@ -51,10 +51,18 @@ export class LiveFeed {
     this.viewer.camera.moveEnd.removeEventListener(this.kick);
   }
 
-  /** Poll now (e.g. after the camera stops moving). */
+  private busy = false;
+  private lastTick = 0;
+
+  /**
+   * Poll soon (e.g. after the camera stops moving). Debounced, and never aborts a poll that is already running —
+   * follow cameras move every frame and would otherwise starve the feed.
+   */
   readonly kick = () => {
+    if (this.busy) return;
+    const since = Date.now() - this.lastTick;
     clearTimeout(this.timer);
-    this.timer = setTimeout(() => void this.tick(), 50);
+    this.timer = setTimeout(() => void this.tick(), since > 1500 ? 80 : 1500 - since);
   };
 
   private schedule(ms: number) {
@@ -92,7 +100,9 @@ export class LiveFeed {
   private async tick() {
     if (this.stopped) return;
     if (document.visibilityState === 'hidden') return; // resumes on visibilitychange
-    this.inflight?.abort();
+    if (this.busy) return;
+    this.busy = true;
+    this.lastTick = Date.now();
     const ctrl = new AbortController();
     this.inflight = ctrl;
     const zoomedIn = this.cameraHeight() < 400_000;
@@ -130,6 +140,8 @@ export class LiveFeed {
         notice: !navigator.onLine ? 'offline' : 'providers_down',
       };
       this.schedule(Math.min(30_000, 2000 * 2 ** Math.min(4, this.failures - 1)));
+    } finally {
+      this.busy = false;
     }
   }
 }

@@ -50,9 +50,5 @@ database_name = "skyview"
 database_id = "00000000-0000-0000-0000-000000000000"   # replace with `wrangler d1 create skyview` output
 migrations_dir = "migrations"
 
-[[kv_namespaces]]
-binding = "CACHE"
-id = "00000000000000000000000000000000"                 # replace with `wrangler kv namespace create CACHE` output
-
 [triggers]
 crons = ["* * * * *"]

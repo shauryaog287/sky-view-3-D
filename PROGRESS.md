@@ -6,7 +6,7 @@ Legend: ✅ done · 🔄 in progress · ⏳ not started · ⛔ blocked (see NEED
 | --- | --- | --- |
 | M1 Scaffold, globe, fallback tiles, CI, tests | ✅ | Offline Natural Earth globe works with zero keys |
 | M2 Backend, providers, caching, live aircraft | ✅ | Live adsb.lol data verified end-to-end through `wrangler dev`; airplanes.live ⛔ needs approval email |
-| M3 Motion, models, cameras, info panel, search | 🔄 | Smoother + tests already in (needed by M2 rendering) |
+| M3 Motion, models, cameras, info panel, search | ✅ | Chase / orbit / cockpit verified in headless Chromium (tablet + phone); adsbdb enrichment live |
 | M4 Airports, phase detection, takeoff/landing, Google tiles | 🔄 | Airport dataset built early (simulator needs runways) |
 | M5 Weather/sky, quality, performance | ⏳ | |
 | M6 Track storage, replay, alerts | 🔄 | D1 schema + TrackRecorder in place |
