@@ -11,6 +11,7 @@ import { registerAlertRoutes } from './routes/alerts';
 import { registerTrackRoutes } from './routes/track';
 import { registerBillingRoutes } from './routes/billing';
 import { registerEventRoutes } from './routes/events';
+import { registerAirport3dRoutes } from './routes/airport3d';
 import { setSubscriptionLookup } from './entitlements';
 import { subscriptionStore, grantsAccess } from './billing/service';
 import { runScheduled } from './scheduled';
@@ -27,6 +28,7 @@ registerAlertRoutes(router);
 registerTrackRoutes(router);
 registerBillingRoutes(router);
 registerEventRoutes(router);
+registerAirport3dRoutes(router);
 
 // Entitlements read the user's latest subscription from Supabase.
 setSubscriptionLookup(async (ctx, user) => {

@@ -50,8 +50,12 @@ export class GroundHeights {
   }
 
   /** Rendered ground height (m) for a runway/airfield at `elevFt`. Starts sampling on first use. */
+  private get ellipsoid(): boolean {
+    return this.layer === 'offline' || this.layer === 'satellite';
+  }
+
   groundM(airport: Airport, elevFt = airport.elevFt): number {
-    if (this.layer === 'offline') return 0;
+    if (this.ellipsoid) return 0;
     const e = this.entry(airport);
     // Before sampling finishes assume MSL ≈ ellipsoid (off by the geoid undulation, typically < 100 m).
     if (!e.sampled) return elevFt * FT_TO_M;
@@ -83,16 +87,16 @@ export class GroundHeights {
     } catch {
       /* fall through */
     }
-    return this.layer === 'offline' ? 0 : undefined;
+    return this.ellipsoid ? 0 : undefined;
   }
 
   private entry(airport: Airport): Entry {
     const key = airport.ident;
     let e = this.cache.get(key);
     if (e) return e;
-    e = { groundM: airport.elevFt * FT_TO_M, sampled: this.layer === 'offline' };
+    e = { groundM: airport.elevFt * FT_TO_M, sampled: this.ellipsoid };
     this.cache.set(key, e);
-    if (this.layer !== 'offline') e.pending = this.sample(airport, e);
+    if (!this.ellipsoid) e.pending = this.sample(airport, e);
     return e;
   }
 

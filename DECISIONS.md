@@ -250,3 +250,20 @@ Short architecture decision records. Newest decisions are appended at the bottom
 - Data attributions are injected into Cesium's credit bar (`src/scene/credits.ts`), so they sit with the Google/ion
   credits and are never covered by UI. Legal pages are plain HTML under `/legal/` (work without JS; Play Store needs a
   privacy-policy URL) and are also shown in-app.
+
+## D-028 · "Exact airport" without a Google key: satellite imagery + OpenStreetMap 3D scenery
+- **Truly photoreal airports come from Google Photorealistic 3D Tiles** (already integrated; needs the key in
+  NEEDS_FROM_ME §3). Without it the old fallback was a 3 km/pixel Natural Earth globe — "grass, sky and a runway".
+- New layer between Cesium ion and offline: **Esri World Imagery** (`ArcGisMapServerImageryProvider`, keyless for
+  development/non-commercial use; `VITE_ARCGIS_API_KEY` for production/commercial). Sub-metre imagery at major airports:
+  real runways, taxiways, aprons, terminal roofs and parked aircraft. Layered above the offline globe, so failed tiles
+  degrade gracefully. Attribution is added to the credit bar.
+- **3D scenery from OpenStreetMap** (`shared/airport3d.ts`): terminals, hangars, other airport buildings, canopies,
+  elevated jet bridges and control towers (shaft + glass cab), extruded with tagged heights / levels / per-kind
+  defaults; aprons and taxiways are drawn only on the offline globe (imagery already shows them). The 12 curated
+  airports ship as static files (`npm run data:airport3d`, 25–200 KB each); any other airport is built on demand by
+  `GET /api/airport3d/:icao` (Overpass → cached 7 days). OSM levels on control towers usually count only the cab, so
+  untagged towers use the curated tower height (≈ public figures: DEL ~100 m, LHR 87 m, JFK 98 m…) or 50 m.
+- The **tower camera now stands in the real control tower** (OSM position) when the scenery is loaded. On imagery
+  layers its narrowest field of view is 34° (flat imagery smears when zoomed at grazing angles); 10° with Google tiles.
+- Painted runway strips are only drawn on the offline globe; with imagery the real runway is visible.

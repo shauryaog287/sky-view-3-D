@@ -11,9 +11,15 @@ import {
   UniformType,
   LightingModel,
   Cartesian3,
+  ArcGisMapServerImageryProvider,
+  Credit,
+  Resource,
 } from 'cesium';
 
-export type BaseLayerKind = 'google3d' | 'ion' | 'offline';
+export type BaseLayerKind = 'google3d' | 'ion' | 'satellite' | 'offline';
+
+/** Esri World Imagery (sub-metre satellite/aerial imagery at major airports). Keyless for non-commercial use. */
+export const ESRI_WORLD_IMAGERY = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer';
 
 export interface BaseLayerStatus {
   kind: BaseLayerKind;
@@ -25,6 +31,10 @@ export interface GoogleTilesConfig {
   /** Direct Google Map Tiles API key. If absent but ionToken is set, Google tiles are streamed through Cesium ion. */
   googleKey?: string;
   ionToken?: string;
+  /** Optional ArcGIS Location Platform key for the satellite layer (required for commercial use). */
+  arcgisKey?: string;
+  /** Allow the keyless satellite imagery layer when Google / ion are unavailable. */
+  satellite?: boolean;
   /** Result of the backend session-cap check. */
   allowed: boolean;
   deniedReason?: string;
@@ -48,6 +58,8 @@ export class BaseLayers {
   private failureCount = 0;
   private offlineLayer?: ImageryLayer;
   private ionLayer?: ImageryLayer;
+  private satelliteLayer?: ImageryLayer;
+  private satelliteCredit?: Credit;
   private readonly tintShader = new CustomShader({
     lightingModel: LightingModel.UNLIT,
     uniforms: {
@@ -103,6 +115,10 @@ export class BaseLayers {
       const ok = await this.useIon(reason);
       if (ok) return this.status;
     }
+    if (cfg.satellite !== false) {
+      const ok = await this.useSatellite(cfg.arcgisKey, reason);
+      if (ok) return this.status;
+    }
     this.set({ kind: 'offline', reason });
     return this.status;
   }
@@ -155,8 +171,35 @@ export class BaseLayers {
     if (this.status.kind !== 'google3d') return;
     if (this.google) this.google.show = false;
     this.viewer.scene.globe.show = true;
-    const ok = await this.useIon(reason);
+    const ok = (await this.useIon(reason)) || (await this.useSatellite(this.lastArcgisKey, reason));
     if (!ok) this.set({ kind: 'offline', reason });
+  }
+
+  private lastArcgisKey?: string;
+
+  /**
+   * Real satellite/aerial imagery on the ellipsoid: airports show their actual runways, taxiways, aprons and terminal
+   * roofs. Layered above the offline globe, so failed tiles simply show Natural Earth underneath.
+   */
+  private async useSatellite(arcgisKey: string | undefined, reason?: string): Promise<boolean> {
+    this.lastArcgisKey = arcgisKey;
+    try {
+      if (!this.satelliteLayer) {
+        const url = new Resource({ url: ESRI_WORLD_IMAGERY, queryParameters: arcgisKey ? { token: arcgisKey } : undefined });
+        const provider = await ArcGisMapServerImageryProvider.fromUrl(url, { enablePickFeatures: false });
+        this.satelliteLayer = this.viewer.imageryLayers.addImageryProvider(provider);
+        this.satelliteCredit = new Credit('Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community', true);
+        this.viewer.creditDisplay.addStaticCredit(this.satelliteCredit);
+      }
+      this.satelliteLayer.show = true;
+      this.viewer.scene.terrainProvider = new EllipsoidTerrainProvider();
+      this.viewer.scene.globe.show = true;
+      this.set({ kind: 'satellite', reason });
+      return true;
+    } catch (err) {
+      console.warn('[tiles] satellite imagery unavailable, using offline globe', err);
+      return false;
+    }
   }
 
   private async useIon(reason?: string): Promise<boolean> {

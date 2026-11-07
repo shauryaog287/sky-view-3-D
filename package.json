@@ -28,7 +28,8 @@
     "db:migrate:remote": "wrangler d1 migrations apply skyview --remote --config worker/wrangler.toml",
     "deploy:api": "wrangler deploy --config worker/wrangler.toml",
     "deploy:web": "npm run build && wrangler pages deploy dist --project-name skyview-3d",
-    "deploy": "npm run deploy:api && npm run deploy:web"
+    "deploy": "npm run deploy:api && npm run deploy:web",
+    "data:airport3d": "tsx scripts/build-airport3d.ts"
   },
   "dependencies": {
     "@preact/signals": "2.11.3",

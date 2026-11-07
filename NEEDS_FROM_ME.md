@@ -22,6 +22,8 @@ public values go in `.env.local` (frontend) or `worker/wrangler.toml` `[vars]`.
 | 14 | Custom domain | Branding, Play Store asset links | Before public launch |
 | 5, 12 | Commercial weather + **licensed flight data** | Charging money | Before `LAUNCH_MODE=freemium` |
 | 13 | Google Play developer account + billing decision | Android app | Later |
+| 15 | ArcGIS key for the satellite layer | Commercial use of the satellite fallback | Before charging money |
+| 16 | Licensed photoreal aircraft models (optional) | Photo-quality aircraft instead of generated ones | Any time |
 
 ## 1. Cloudflare account (required to deploy)
 1. Sign up at https://dash.cloudflare.com/sign-up (free plan is enough to start; Durable Objects with SQLite storage
@@ -151,3 +153,12 @@ public values go in `.env.local` (frontend) or `worker/wrangler.toml` `[vars]`.
 ## 14. Domain
 - Buy a domain, add it to the Pages project (Pages → Custom domains), add it to `ALLOWED_ORIGINS`, the Google API key
   referrer list, the Cesium ion token's allowed URLs, Supabase redirect URLs and the Razorpay webhook URL.
+
+## 15. Satellite imagery key (before charging money)
+- The satellite fallback layer uses Esri World Imagery, which works without a key for development and non-commercial
+  use. For a paid product: create an ArcGIS Location Platform account (https://location.arcgis.com, free tier
+  available) → *Developer credentials → API key* with the **Basemaps** privilege, restrict it to your domains, and set
+  `VITE_ARCGIS_API_KEY`. Keep its attribution visible (already in the credit bar).
+- 3D airport scenery comes from public Overpass API servers (cached 7 days). If you scale up, point `OVERPASS_URLS`
+  at your own Overpass instance or a paid provider, and re-run `npm run data:airport3d` occasionally to refresh the
+  curated airports.

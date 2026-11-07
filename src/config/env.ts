@@ -12,6 +12,7 @@ export const env = {
   apiBase: str(raw.VITE_API_BASE) ?? '',
   launchMode: str(raw.VITE_LAUNCH_MODE) === 'freemium' ? ('freemium' as const) : ('open' as const),
   cesiumIonToken: str(raw.VITE_CESIUM_ION_TOKEN),
+  arcgisApiKey: str(raw.VITE_ARCGIS_API_KEY),
   supabaseUrl: str(raw.VITE_SUPABASE_URL),
   supabaseAnonKey: str(raw.VITE_SUPABASE_ANON_KEY),
   vapidPublicKey: str(raw.VITE_VAPID_PUBLIC_KEY),

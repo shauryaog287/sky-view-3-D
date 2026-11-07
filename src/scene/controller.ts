@@ -9,6 +9,7 @@ import { CameraRig } from './cameras';
 import { GroundHeights } from './ground';
 import { PhaseTracker } from './phaseTracker';
 import { AirportLayer } from './airportLayer';
+import { Airport3DLayer } from './airport3dLayer';
 import { SkyController, cartoDeg } from './sky';
 import { WeatherWatcher } from './weatherWatcher';
 import { ReplayController } from './replay';
@@ -42,6 +43,7 @@ export class SceneController {
   readonly ground: GroundHeights;
   readonly phases: PhaseTracker;
   readonly airportsLayer: AirportLayer;
+  readonly airport3d: Airport3DLayer;
   readonly sky: SkyController;
   readonly replay: ReplayController;
   readonly alerts: AlertMonitor;
@@ -66,6 +68,7 @@ export class SceneController {
     );
     this.phases = new PhaseTracker(aircraftStore, this.ground);
     this.airportsLayer = new AirportLayer(this.viewer);
+    this.airport3d = new Airport3DLayer(this.viewer, this.ground);
     this.feed = new LiveFeed(this.viewer);
     this.cameras = new CameraRig(this.viewer, this.aircraft);
     this.sky = new SkyController(this.viewer, this.baseLayers);
@@ -89,6 +92,8 @@ export class SceneController {
       baseLayerStatus.value = s;
       this.ground.setLayer(s.kind);
       this.airportsLayer.setLayer(s.kind);
+      this.airport3d.setLayer(s.kind);
+      this.cameras.minGroundFovDeg = s.kind === 'google3d' ? 10 : 34;
     });
 
     // Render height = pressure altitude + a per-airport correction (geoid + terrain model + QNH), so aircraft land on
@@ -254,6 +259,26 @@ export class SceneController {
     const position = Cartesian3.fromDegrees(vp.lon, vp.lat, groundAtVp + vp.heightAglM);
     this.cameras.groundCamera = { position, label: vp.label };
     this.preloadAirport(m.airport);
+    if (mode === 'tower') {
+      // Prefer the airport's real control tower (OpenStreetMap) once its 3D scenery is loaded.
+      const icao = m.airport.ident;
+      const useReal = () => {
+        const real = this.airport3d.towerFor(icao);
+        if (real && this.cameras.groundCamera?.label === vp.label) {
+          this.cameras.groundCamera = { position: Cartesian3.fromDegrees(real.lon, real.lat, real.height), label: vp.label };
+        }
+        return !!real;
+      };
+      if (!useReal() && this.baseLayers.current.kind !== 'google3d') {
+        this.airport3d.ensure(icao);
+        const prev = this.airport3d.onLoaded;
+        this.airport3d.onLoaded = (loaded) => {
+          prev?.(loaded);
+          if (loaded === icao) useReal();
+        };
+      }
+      if (this.airport3d.towerFor(icao)) return true;
+    }
     // Lift the camera above any building the photoreal tiles have at that spot.
     void this.ground.sampleAt(vp.lat, vp.lon).then((h) => {
       if (h !== undefined && h + 3 > groundAtVp + vp.heightAglM && this.cameras.groundCamera?.label === vp.label) {
@@ -270,6 +295,7 @@ export class SceneController {
     void loadAirports().then((a) => {
       this.phases.setAirports(a);
       this.airportsLayer.setAirports(a);
+      this.airport3d.setAirports(a);
     });
     this.weatherTimer = setInterval(() => {
       void this.weather.check(this.focusPoint(), weatherOn.value && canUseFeature('weather_effects'));
@@ -290,6 +316,8 @@ export class SceneController {
       allowed: !!session?.allowed && (session.mode === 'google' ? !!session.googleKey : !!ionToken),
       googleKey: session?.mode === 'google' ? session.googleKey : undefined,
       ionToken,
+      arcgisKey: env.arcgisApiKey,
+      satellite: true,
       deniedReason: !wantPhotoreal
         ? canUseFeature('airport_views')
           ? 'Photorealistic 3D turned off in settings'
@@ -328,6 +356,7 @@ export class SceneController {
     this.handler?.destroy();
     for (const d of this.disposers) d();
     this.airportsLayer.destroy();
+    this.airport3d.destroy();
     this.aircraft.destroy();
     if (!this.viewer.isDestroyed()) this.viewer.destroy();
   }

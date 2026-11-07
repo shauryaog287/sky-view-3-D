@@ -38,6 +38,11 @@ export class AirportLayer {
   }
 
   setLayer(kind: BaseLayerKind) {
+    if (kind !== this.layer) {
+      // Surfaces are only drawn on the offline globe; with imagery the real runways are visible. Redraw on change.
+      for (const ents of this.drawn.values()) for (const e of ents) this.viewer.entities.remove(e);
+      this.drawn.clear();
+    }
     this.layer = kind;
     this.refresh();
   }
@@ -68,8 +73,10 @@ export class AirportLayer {
   private draw(a: Airport): Entity[] {
     const out: Entity[] = [];
     const add = (e: Entity.ConstructorOptions) => out.push(this.viewer.entities.add(e));
+    const surfaces = this.layer === 'offline';
     for (const r of a.runways) {
       const positions = Cartesian3.fromDegreesArray([r.le.lon, r.le.lat, r.he.lon, r.he.lat]);
+      if (surfaces) {
       add({
         corridor: {
           positions,
@@ -88,6 +95,7 @@ export class AirportLayer {
           distanceDisplayCondition: new DistanceDisplayCondition(0, 30_000),
         },
       });
+      }
       for (const end of [r.le, r.he]) {
         if (!end.ident) continue;
         add({

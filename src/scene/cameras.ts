@@ -39,6 +39,11 @@ export class CameraRig {
   mode: CameraMode = 'free';
   target: string | null = null;
   groundCamera?: GroundCamera;
+  /**
+   * Narrowest ground-camera field of view (degrees). Real 3D tiles hold up to a tight zoom; flat imagery smears at
+   * grazing angles, so the scene widens this when photoreal tiles are not active.
+   */
+  minGroundFovDeg = 10;
   private engaged = false;
   private smoothHeading?: number;
   private chaseRange = 0;
@@ -237,7 +242,7 @@ export class CameraRig {
     const size = CLASS_SIZE[f.a.modelClass].length;
     const fr = camera.frustum;
     if (fr instanceof PerspectiveFrustum) {
-      fr.fov = clamp(2 * Math.atan((size * 3) / Math.max(1, dist)), CesiumMath.toRadians(10), DEFAULT_FOV);
+      fr.fov = clamp(2 * Math.atan((size * 3) / Math.max(1, dist)), CesiumMath.toRadians(this.minGroundFovDeg), DEFAULT_FOV);
       fr.near = 1;
     }
   }

@@ -195,6 +195,9 @@ select {
 .layer-ion .dot {
   background: var(--accent);
 }
+.layer-satellite .dot {
+  background: var(--accent);
+}
 .layer-offline .dot {
   background: var(--amber);
 }

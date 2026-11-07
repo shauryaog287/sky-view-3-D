@@ -27,6 +27,7 @@ export interface Env {
   PAYMENTS_LIVE_ACK?: string;
   COMMERCIAL_PROVIDER?: string;
   OPENSKY_DAILY_CREDITS?: string;
+  OVERPASS_URLS?: string; // comma-separated Overpass API endpoints for 3D airport scenery
 
   // ── Secrets ──
   OPENSKY_CLIENT_ID?: string;

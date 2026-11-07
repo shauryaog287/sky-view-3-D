@@ -3,6 +3,7 @@ import { baseLayerStatus, toasts, webglError } from '../state/store';
 const LAYER_LABEL = {
   google3d: 'Photorealistic 3D',
   ion: 'Terrain + imagery',
+  satellite: 'Satellite',
   offline: 'Basic globe',
 } as const;
 
