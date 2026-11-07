@@ -6,7 +6,7 @@ import { useFeature } from '../state/entitlements';
 import { follow, selectAircraft, stopFollow, togglePin } from '../state/actions';
 import { flightPhases, PHASE_LABEL } from '../state/phases';
 import { isAirportPhase } from '../../shared/phase';
-import { openReplay } from '../state/replay';
+import { openReplay, replay } from '../state/replay';
 import { openAlertSheet } from '../state/alerts';
 import { flightNumberFromCallsign, airlineFromCallsign } from '../../shared/airlines';
 import { fmtAge, fmtAlt, fmtAltFeet, fmtHeading, fmtKmh, fmtSpeed, fmtVs, freshness } from '../lib/format';
@@ -30,7 +30,7 @@ export function InfoPanel() {
     return () => removeEventListener('keydown', onKey);
   }, []);
 
-  if (!hex) return null;
+  if (!hex || replay.value) return null;
   if (!a) {
     return (
       <aside class="panel info-panel" aria-label="Flight details">

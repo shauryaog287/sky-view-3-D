@@ -7,6 +7,8 @@ import { registerFlightRoutes } from './routes/flights';
 import { registerInfoRoutes } from './routes/info';
 import { registerTilesRoutes } from './routes/tiles';
 import { registerWeatherRoutes } from './routes/weather';
+import { registerAlertRoutes } from './routes/alerts';
+import { registerTrackRoutes } from './routes/track';
 import { runScheduled } from './scheduled';
 
 export { FlightHub } from './flightHub';
@@ -17,6 +19,8 @@ registerFlightRoutes(router);
 registerInfoRoutes(router);
 registerTilesRoutes(router);
 registerWeatherRoutes(router);
+registerAlertRoutes(router);
+registerTrackRoutes(router);
 
 const DEFAULT_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4173'];
 

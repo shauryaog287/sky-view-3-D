@@ -121,14 +121,14 @@ export class FlightSimulator {
     }
     const distM = (s.gs ?? 0) * KT_TO_MS * flyS;
     // Gentle continuation of any recorded turn for up to 60 s, then straight.
-    const turnS = Math.min(flyS, 60);
+    const turnS = clamp(flyS, -60, 60); // continue (or rewind) a recorded turn for at most a minute
     const trackRate = clamp(s.trackRate ?? 0, -3, 3);
     const midTrack = norm360(s.track + (trackRate * turnS) / 2);
     const finalTrack = norm360(s.track + trackRate * turnS);
     const p = destinationPoint(s.lat, s.lon, midTrack, distM);
     const out: AircraftState = { ...s, lat: p.lat, lon: p.lon, track: finalTrack, posTs: t - 800, seenTs: t - 300 };
-    if (flyS > 60) out.trackRate = 0;
-    if (s.roll !== undefined && flyS > 60) out.roll = 0;
+    if (Math.abs(flyS) > 60) out.trackRate = 0;
+    if (s.roll !== undefined && Math.abs(flyS) > 60) out.roll = 0;
     const alt0 = s.altBaro ?? s.altGeom;
     if (alt0 !== undefined && s.vrate !== undefined && seed.levelAt !== undefined) {
       const raw = alt0 + (s.vrate * flyS) / 60;

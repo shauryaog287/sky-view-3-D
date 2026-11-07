@@ -182,3 +182,23 @@ Short architecture decision records. Newest decisions are appended at the bottom
 - Per-frame CPU for 200 aircraft (motion sampling) measured at ~0.12 ms (`src/motion/perf.test.ts`); LOD re-selection
   runs at 4 Hz instead of every frame; billboards for everything else. Real-device GPU profiling is still needed
   (see the device test list in README).
+
+## D-021 · Track storage & replay
+- The FlightHub's `TrackRecorder` turns polled data into sparse points (≥ 15 s apart on steady courses, ≥ 4 s in turns
+  / climbs), buffers them in memory and writes them to D1 in multi-row INSERT batches every 30 s (DO alarm) or just
+  before a replay read. Cron prunes points older than `TRACK_RETENTION_MIN` (120). Only flights inside areas someone
+  is viewing are recorded — that is what the free feeds give us anyway. Rough cost: 300 visible aircraft ≈ 70k rows/h
+  at peak; D1 free tier is 100k writes/day, so expect the paid Workers plan ($5/mo, 50M writes) once traffic grows.
+- Replay uses cubic Hermite splines with recorded velocity tangents (Catmull-Rom fallback, linear across gaps > 2 min),
+  injected as a pinned pseudo-aircraft so models, heights, phases and cameras all work unchanged.
+
+## D-022 · Alerts & Web Push
+- Conditions: takes off · starts descending · on approach · lands, optional airport filter (destination from route
+  enrichment or the runway the flight is lined up with). One-shot, expire after 24 h, 10 active per device.
+- Evaluated by the Worker cron every minute with the same `detectPhase` as the client (phase memory stored on the alert
+  row). "Lands" fires at touchdown (landing roll on the ground) because many aircraft stop transmitting soon after.
+- Web Push is implemented with WebCrypto (RFC 8291 aes128gcm + RFC 8292 VAPID/ES256); verified byte-for-byte against the
+  RFC 8291 test vector. Expired subscriptions (404/410) are dropped.
+- Without push (mock mode, no VAPID keys, permission denied, iOS Safari outside an installed PWA) alerts are evaluated
+  in-app while SkyView is open: toast + local notification, and the alert is then deleted server-side so nothing fires
+  twice.

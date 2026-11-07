@@ -11,6 +11,8 @@ import { PhaseTracker } from './phaseTracker';
 import { AirportLayer } from './airportLayer';
 import { SkyController, cartoDeg } from './sky';
 import { WeatherWatcher } from './weatherWatcher';
+import { ReplayController } from './replay';
+import { AlertMonitor } from './alertMonitor';
 import { QUALITY, type QualityLevel } from '../config/quality';
 import { photoreal, quality, showLabels, weatherOn } from '../state/settings';
 import { env } from '../config/env';
@@ -40,6 +42,8 @@ export class SceneController {
   readonly phases: PhaseTracker;
   readonly airportsLayer: AirportLayer;
   readonly sky: SkyController;
+  readonly replay: ReplayController;
+  readonly alerts: AlertMonitor;
   private readonly weather: WeatherWatcher;
   private weatherTimer?: ReturnType<typeof setInterval>;
   qualityLevel: QualityLevel = 'medium';
@@ -64,6 +68,12 @@ export class SceneController {
     this.feed = new LiveFeed(this.viewer);
     this.cameras = new CameraRig(this.viewer, this.aircraft);
     this.sky = new SkyController(this.viewer, this.baseLayers);
+    this.alerts = new AlertMonitor(this.phases);
+    this.replay = new ReplayController(this.viewer, aircraftStore, this.cameras, (altFt, lat, lon) => {
+      const near = this.phases.airportIndex?.nearest(lat, lon, 40_000)?.airport;
+      if (altFt === null) return near ? this.ground.groundM(near) : 0;
+      return altFt * FT_TO_M + (near ? this.ground.offsetM(near) : 0);
+    });
     this.weather = new WeatherWatcher((w) => {
       this.sky.setWeather(w);
       // METAR altimeter corrects pressure altitudes near that airport (QNH ≠ 1013.25).
@@ -252,6 +262,7 @@ export class SceneController {
   async start() {
     this.feed.start();
     this.phases.start();
+    this.alerts.start();
     void loadAirports().then((a) => {
       this.phases.setAirports(a);
       this.airportsLayer.setAirports(a);
@@ -308,6 +319,8 @@ export class SceneController {
     this.phases.stop();
     clearInterval(this.weatherTimer);
     this.sky.destroy();
+    this.replay.destroy();
+    this.alerts.stop();
     this.handler?.destroy();
     for (const d of this.disposers) d();
     this.airportsLayer.destroy();

@@ -5,6 +5,8 @@ import { InfoPanel } from './ui/InfoPanel';
 import { SearchBox } from './ui/SearchBox';
 import { PinnedBar } from './ui/PinnedBar';
 import { SettingsSheet } from './ui/SettingsSheet';
+import { ReplayBar } from './ui/ReplayBar';
+import { AlertSheet } from './ui/AlertSheet';
 import { settingsOpen } from './state/settings';
 
 export function App() {
@@ -26,7 +28,9 @@ export function App() {
       <FeedBanner />
       <InfoPanel />
       <PinnedBar />
+      <ReplayBar />
       <SettingsSheet />
+      <AlertSheet />
       <Toasts />
       <WebglErrorScreen />
     </div>

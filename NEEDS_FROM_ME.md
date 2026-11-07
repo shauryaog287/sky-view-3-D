@@ -52,4 +52,11 @@ public values go in `.env.local` (frontend) or `worker/wrangler.toml` `[vars]`.
   `customer-api.open-meteo.com` host — a one-line change in `worker/src/routes/weather.ts`).
 - **aviationweather.gov** (NOAA) data is public domain; no action needed.
 
+## 6. Web Push keys (for alerts when the app is closed)
+1. Run `npm run vapid:generate`.
+2. Put the printed `VAPID_PUBLIC_KEY` into `worker/wrangler.toml` → `[vars] VAPID_PUBLIC_KEY`, and set
+   `VAPID_SUBJECT = "mailto:<your support email>"` (push services contact this address if something goes wrong).
+3. `npx wrangler secret put VAPID_PRIVATE_KEY --config worker/wrangler.toml` and paste the private key.
+   (Locally: both lines in `worker/.dev.vars`.) Never commit the private key; rotating it invalidates subscriptions.
+
 _(More items are added as milestones land.)_

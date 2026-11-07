@@ -3,7 +3,7 @@ import type { Env } from './env';
 import { intVar } from './env';
 import { FlightService } from './flights/flightService';
 import { TrackRecorder } from './flights/trackRecorder';
-import { D1TrackSink } from './flights/d1TrackSink';
+import { D1TrackSink, readTrack } from './flights/d1TrackSink';
 import { createProviders } from './providers';
 import { errorResponse, json, parseBBoxParam, HttpError } from './lib/http';
 
@@ -53,6 +53,14 @@ export class FlightHub extends DurableObject<Env> {
             callsign: url.searchParams.get('callsign') ?? undefined,
           });
           return json({ aircraft: a ?? null });
+        }
+        case '/track': {
+          // Flush buffered points first so the replay includes the last few seconds.
+          await this.recorder?.flush();
+          const hex = url.searchParams.get('hex') ?? '';
+          const minutes = Number(url.searchParams.get('minutes')) || 60;
+          const points = this.env.DB ? await readTrack(this.env.DB, hex, Date.now() - minutes * 60_000) : [];
+          return json({ hex, points });
         }
         case '/status':
           return json({

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="g" cx="40%" cy="35%" r="75%">
+      <stop offset="0" stop-color="#173a5c"/>
+      <stop offset="1" stop-color="#060b14"/>
+    </radialGradient>
+    <linearGradient id="a" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7fe6ff"/>
+      <stop offset="1" stop-color="#39d0ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <circle cx="256" cy="268" r="168" fill="none" stroke="#1f5a80" stroke-width="10"/>
+  <ellipse cx="256" cy="268" rx="78" ry="168" fill="none" stroke="#174866" stroke-width="7"/>
+  <path d="M88 268h336M106 190h300M106 346h300" stroke="#174866" stroke-width="7" fill="none"/>
+  <path d="M120 400 Q 256 300 400 150" stroke="#e07bff" stroke-width="9" fill="none" stroke-linecap="round" stroke-dasharray="2 22"/>
+  <g transform="translate(330 188) rotate(45) scale(4.2) translate(-32 -32)">
+    <path fill="url(#a)" stroke="#020814" stroke-width="1.2" d="M32 3c2 0 3.2 2.6 3.2 6v14.5L60 36.5v4.2l-24.8-7.4v16.2l7.4 5.6v3.6L32 56l-10.6 2.7v-3.6l7.4-5.6V33.3L4 40.7v-4.2l24.8-13V9c0-3.4 1.2-6 3.2-6z"/>
+  </g>
+</svg>

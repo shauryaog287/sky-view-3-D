@@ -72,3 +72,34 @@ test('settings: quality presets and toggles', async ({ page }) => {
   await expect(sheet).toBeHidden();
   expect(errors).toEqual([]);
 });
+
+test('replay the last hour of a flight', async ({ page }) => {
+  const errors = await boot(page);
+  await expect(page.getByTestId('flight-count')).toContainText(/[1-9]\d* flights/);
+  await page.fill('#flight-search', 'SKV202');
+  await page.press('#flight-search', 'Enter');
+  await expect(page.getByTestId('info-panel')).toBeVisible();
+  await page.getByTestId('btn-replay').click();
+  await expect(page.getByTestId('replay-bar')).toBeVisible();
+  await expect(page.getByTestId('replay-play')).toBeVisible({ timeout: 20_000 });
+  await page.getByTestId('replay-play').click(); // pause
+  await page.getByTestId('replay-exit').click();
+  await expect(page.getByTestId('replay-bar')).toBeHidden();
+  expect(errors).toEqual([]);
+});
+
+test('set a flight alert', async ({ page }) => {
+  const errors = await boot(page);
+  await expect(page.getByTestId('flight-count')).toContainText(/[1-9]\d* flights/);
+  await page.fill('#flight-search', 'SKV101');
+  await page.press('#flight-search', 'Enter');
+  await expect(page.getByTestId('info-panel')).toBeVisible();
+  await page.getByTestId('btn-alerts').click();
+  const sheet = page.getByTestId('alert-sheet');
+  await expect(sheet).toBeVisible();
+  await sheet.getByText('lands').click();
+  await page.getByTestId('alert-create').click();
+  await expect(sheet).toBeHidden();
+  await expect(page.locator('.toast').filter({ hasText: 'Alert set' })).toBeVisible();
+  expect(errors).toEqual([]);
+});
