@@ -1,0 +1,16 @@
+node_modules/
+dist/
+dist-mock/
+.wrangler/
+.dev.vars
+.env
+.env.*
+!.env.example
+!.env.mock
+*.local
+coverage/
+playwright-report/
+test-results/
+data/raw/
+.DS_Store
+*.log
