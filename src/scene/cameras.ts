@@ -45,6 +45,8 @@ export class CameraRig {
   private lastApplied = 0;
   private lastFrame = 0;
   private reduceMotion = false;
+  /** Set while waiting for a just-added aircraft to get its first rendered frame. */
+  private pendingSince?: number;
 
   constructor(
     private readonly viewer: Viewer,
@@ -66,7 +68,12 @@ export class CameraRig {
     this.smoothHeading = undefined;
     this.layer.models?.hidden.clear();
     const f = this.layer.frameOf(hex);
-    if (!f) return;
+    if (!f) {
+      // The aircraft was just added (search result, replay) and has not been drawn yet: start on the next frame.
+      this.pendingSince = now;
+      return;
+    }
+    this.pendingSince = undefined;
     const size = CLASS_SIZE[f.a.modelClass];
     if (changingTarget || !this.chaseRange) this.chaseRange = Math.max(80, size.length * 3.2);
     this.setControls(mode);
@@ -110,6 +117,7 @@ export class CameraRig {
   }
 
   stop() {
+    this.pendingSince = undefined;
     this.mode = 'free';
     this.target = null;
     this.engaged = false;
@@ -142,6 +150,11 @@ export class CameraRig {
   update(now: number): boolean {
     if (this.mode === 'free' || !this.target) return true;
     const f = this.layer.frameOf(this.target);
+    if (this.pendingSince !== undefined) {
+      if (f) this.follow(this.target, this.mode, now);
+      else return now - this.pendingSince < 3000; // give up (lost contact) if it never shows up
+      return true;
+    }
     if (!f) return false;
     const dt = this.lastFrame ? Math.min(0.2, (now - this.lastFrame) / 1000) : 0.016;
     this.lastFrame = now;
