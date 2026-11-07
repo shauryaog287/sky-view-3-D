@@ -43,3 +43,18 @@ test.describe('flight details and cameras', () => {
     expect(errors).toEqual([]);
   });
 });
+
+test('approach detection offers tower and runway cameras', async ({ page }) => {
+  const errors = await boot(page);
+  await expect(page.getByTestId('flight-count')).toContainText(/[1-9]\d* flights/);
+  await page.fill('#flight-search', 'SKV101');
+  await page.press('#flight-search', 'Enter');
+  await expect(page.getByTestId('info-panel')).toBeVisible();
+  // Scripted arrival: phase detection should report approach (or landing/ground late in its loop).
+  await expect(page.getByTestId('info-panel')).toContainText(/On approach|Landing|On ground|Descending/, { timeout: 15_000 });
+  await page.getByTestId('cam-tower').click();
+  await expect(page.getByTestId('cam-tower')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByTestId('cam-runway').click();
+  await expect(page.getByTestId('cam-runway')).toHaveAttribute('aria-pressed', 'true');
+  expect(errors).toEqual([]);
+});

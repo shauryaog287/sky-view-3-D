@@ -22,6 +22,18 @@ export class MockApiClient implements ApiClient {
   readonly mode = 'mock' as const;
   private sim?: Promise<{ sim: FlightSimulator; airports: AirportIndex }>;
   private alerts: AlertRecord[] = readPref<AlertRecord[]>('mock_alerts', []);
+  /** Mock-only time shift (?simShift=seconds) to jump scripted flights to an interesting moment for demos/tests. */
+  private readonly shiftMs = (() => {
+    try {
+      return (Number(new URLSearchParams(location.search).get('simShift')) || 0) * 1000;
+    } catch {
+      return 0;
+    }
+  })();
+
+  private now() {
+    return Date.now() + this.shiftMs;
+  }
 
   setAuthToken() {}
 
@@ -40,7 +52,7 @@ export class MockApiClient implements ApiClient {
 
   private async all(): Promise<AircraftState[]> {
     const { sim } = await this.load();
-    return sim.snapshot(Date.now());
+    return sim.snapshot(this.now());
   }
 
   async config(): Promise<AppConfig> {
@@ -57,7 +69,7 @@ export class MockApiClient implements ApiClient {
   }
 
   async region(b: BBox): Promise<RegionResponse> {
-    const now = Date.now();
+    const now = this.now();
     const c = bboxCenter(b);
     let list = (await this.all()).filter((a) => inBBox(b, a.lat, a.lon));
     const truncated = list.length > 400;
@@ -131,7 +143,7 @@ export class MockApiClient implements ApiClient {
 
   async track(hex: string, minutes: number): Promise<TrackPoint[]> {
     const { sim } = await this.load();
-    const now = Date.now();
+    const now = this.now();
     return sim.history(hex, now - minutes * 60_000, now, 15_000).map((a) => ({
       hex,
       ts: a.posTs,

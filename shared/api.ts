@@ -20,6 +20,8 @@ export interface TilesSessionResponse {
   allowed: boolean;
   mode: 'google' | 'ion' | 'off';
   googleKey?: string;
+  /** Public (URL-restricted) Cesium ion token, so the frontend needs no build-time token. */
+  ionToken?: string;
   reason?: string;
   usedToday?: number;
   limitToday?: number;

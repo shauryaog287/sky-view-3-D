@@ -105,6 +105,13 @@ export class BaseLayers {
     return this.status;
   }
 
+  /** Switch to Google tiles later in the session (e.g. after an upgrade). Keeps the current layer on failure. */
+  async tryGoogle(cfg: GoogleTilesConfig): Promise<boolean> {
+    if (this.status.kind === 'google3d') return true;
+    if (!cfg.googleKey && !cfg.ionToken) return false;
+    return this.useGoogle(cfg);
+  }
+
   private async useGoogle(cfg: GoogleTilesConfig): Promise<boolean> {
     try {
       if (!this.google) {

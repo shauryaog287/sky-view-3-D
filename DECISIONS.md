@@ -115,3 +115,45 @@ Short architecture decision records. Newest decisions are appended at the bottom
 - Entering a follow mode flies to where the aircraft *will be* when the flight ends (motion prediction), so there is no
   snap at the end. `prefers-reduced-motion` skips the flight.
 - Feed polling is debounced and never aborted by camera movement (follow cameras move every frame).
+
+## D-015 · Phase detection
+- `shared/phase.ts` (pure; used by the browser and by the Worker's alert cron). Inputs: pressure altitude relative to
+  the best-matching runway's elevation, vertical rate, ground speed + its trend, and alignment with the runway
+  (heading within 25°, inside a cone that widens 12 % with distance, up to 15 NM out).
+- Rules: on ground + on runway + ≥ 35 kt → takeoff roll (accelerating / came from ground) or landing (decelerating /
+  came from approach); aligned + descending + < 6,000 ft AGL → approach; aligned + < 200 ft → landing; low, descending
+  and < 9 NM from a field without alignment → approach (circling); otherwise climb/descent/cruise by vertical rate.
+- 2.5 s debounce (hysteresis) except for takeoff roll / landing, which are short and strongly signalled.
+- Verified against the five scripted demo flights (unit tests) — each yields the exact expected sequence and runway.
+
+## D-016 · Render heights near airports
+- ADS-B pressure altitude ≈ MSL, while Cesium draws ellipsoid heights and every base layer has its own surface.
+- We sample the *rendered* surface at each airport's runway ends (`sampleHeightMostDetailed` on Google tiles,
+  `sampleTerrainMostDetailed` on ion terrain, 0 on the offline ellipsoid) and derive a per-airport offset
+  (`ground − field elevation` + QNH correction from METAR). Render height = pressure altitude + offset of the aircraft's
+  reference airport, blended over ~2 s when the reference changes. Aircraft therefore touch down on the drawn runway on
+  every layer. Away from airports the last offset is kept (error irrelevant at altitude).
+- Sampling on Google tiles forces the tiles around those points to load: this *is* the "pre-load tiles around the
+  destination airport when a followed flight starts descending" mechanism (destination from the route, else the runway
+  the flight is lined up with).
+
+## D-017 · Tower / runway-end cameras
+- Viewpoints are defined relative to runway geometry (`shared/airportPresets.ts`), not hard-coded coordinates:
+  tower = beside the runway in use (side, offset, along-fraction, height); runway-end = under the approach path before
+  the threshold for arrivals, beside the rotation point for departures. 12 curated airports (DEL BOM BLR MAA CCU HYD
+  RPR + DXB LHR SIN JFK FRA) have tuned values; every other airport gets the defaults (tower on the terminal side, which
+  is inferred from the airport reference point). **Curated values were tuned against runway geometry, not visually
+  against Google tiles** — check them on device and tweak the numbers in that file.
+- The camera is lifted above any building the photoreal tiles have at that spot, and zooms (FOV 10–60°) to keep the
+  aircraft framed. Silhouette outlines are disabled there (Cesium's silhouette pass rings at narrow FOV).
+
+## D-018 · Google tiles cost guardrails
+- `POST /api/tiles/session` is called once per page load, before the tileset is created; the tileset then lives for the
+  whole session (one billable root request). Counters in D1 (`quota_counters`): per user/device (default 20/day),
+  per IP (3× that, so minting device ids does not help), and a global daily budget (default 3,000). Over any cap the
+  client uses ion terrain or the offline globe. All three are Worker vars.
+- In `freemium` mode photoreal tiles are part of the Pro "airport views" feature; free users get the cheaper layer.
+- The Google key is handed to the browser (Map Tiles keys are browser keys); protect it with HTTP-referrer and API
+  restrictions plus a hard daily quota in Google Cloud (see NEEDS_FROM_ME). The Worker can also hand out the public
+  Cesium ion token so the frontend build needs no tokens at all.
+- Without photoreal tiles, runways and airport codes are drawn as overlays so takeoffs/landings still read clearly.

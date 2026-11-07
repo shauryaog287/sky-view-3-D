@@ -5,6 +5,7 @@ import { flightInfo, ensureFlightInfo } from '../state/flightInfo';
 import { useFeature } from '../state/entitlements';
 import { follow, selectAircraft, stopFollow, togglePin } from '../state/actions';
 import { flightPhases, PHASE_LABEL } from '../state/phases';
+import { isAirportPhase } from '../../shared/phase';
 import { openReplay } from '../state/replay';
 import { openAlertSheet } from '../state/alerts';
 import { flightNumberFromCallsign, airlineFromCallsign } from '../../shared/airlines';
@@ -104,7 +105,7 @@ export function InfoPanel() {
         <Readout label="ICAO hex" value={a.hex.toUpperCase()} sub={`via ${sourceLabel(s.source)}${s.mlat ? ' (MLAT)' : ''}`} />
       </dl>
 
-      <CameraButtons hex={a.hex} following={following} />
+      <CameraButtons hex={a.hex} following={following} suggestGround={isAirportPhase(phase)} />
       {following && (
         <button class="details-toggle" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
           {expanded ? 'Less ▴' : 'Details ▾'}
@@ -154,14 +155,14 @@ function Readout({ label, value, sub }: { label: string; value: string; sub?: st
   );
 }
 
-function CameraButtons({ hex, following }: { hex: string; following: boolean }) {
+function CameraButtons({ hex, following, suggestGround }: { hex: string; following: boolean; suggestGround: boolean }) {
   const mode = cameraMode.value;
   const btn = (m: 'orbit' | 'chase' | 'cockpit' | 'tower' | 'runway', label: string, feature: Parameters<typeof useFeature>[0]) => {
     const f = useFeature(feature);
     const active = following && mode === m;
     return (
       <button
-        class={`seg ${active ? 'on' : ''}`}
+        class={`seg ${active ? 'on' : ''} ${suggestGround && (m === 'tower' || m === 'runway') && !active ? 'suggest' : ''}`}
         aria-pressed={active}
         onClick={() => f.run(() => follow(hex, m))}
         data-testid={`cam-${m}`}

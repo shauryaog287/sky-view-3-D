@@ -695,3 +695,7 @@ select {
     margin: 4px 0 6px;
   }
 }
+.seg.suggest {
+  border-color: rgba(255, 181, 71, 0.8);
+  box-shadow: 0 0 0 2px rgba(255, 181, 71, 0.18);
+}

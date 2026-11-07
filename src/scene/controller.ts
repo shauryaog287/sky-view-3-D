@@ -1,4 +1,4 @@
-import { ScreenSpaceEventHandler, ScreenSpaceEventType, type Viewer, type Cartesian2 } from 'cesium';
+import { Cartesian3, Cartographic, ScreenSpaceEventHandler, ScreenSpaceEventType, type Viewer, type Cartesian2 } from 'cesium';
 import { effect } from '@preact/signals';
 import { createViewer } from './viewer';
 import { BaseLayers } from './baseLayers';
@@ -6,11 +6,22 @@ import { AircraftLayer } from './aircraftLayer';
 import { LiveFeed } from './liveFeed';
 import { ModelPool } from './modelPool';
 import { CameraRig } from './cameras';
+import { GroundHeights } from './ground';
+import { PhaseTracker } from './phaseTracker';
+import { AirportLayer } from './airportLayer';
 import { env } from '../config/env';
-import { baseLayerStatus } from '../state/store';
+import { api } from '../api';
+import { baseLayerStatus, toast } from '../state/store';
 import { aircraftStore, nowMs } from '../state/aircraftStore';
 import { cameraMode, followHex, selectedHex } from '../state/selection';
-import { toast } from '../state/store';
+import { canUseFeature, featureContext } from '../state/entitlements';
+import { flightInfo } from '../state/flightInfo';
+import { loadAirports } from '../data/airports';
+import { readPref } from '../lib/device';
+import { FT_TO_M } from '../../shared/geo';
+import { towerViewpoint, runwayViewpoint } from '../../shared/airportPresets';
+import type { FlightPhase } from '../../shared/types';
+import type { Airport } from '../../shared/airports';
 
 /**
  * Owns the Cesium scene and every scene subsystem. One instance per page load.
@@ -22,20 +33,56 @@ export class SceneController {
   readonly aircraft: AircraftLayer;
   readonly feed: LiveFeed;
   readonly cameras: CameraRig;
+  readonly ground: GroundHeights;
+  readonly phases: PhaseTracker;
+  readonly airportsLayer: AirportLayer;
   private readonly disposers: (() => void)[] = [];
   private handler?: ScreenSpaceEventHandler;
+  private lastFrame = 0;
+  private readonly suggested = new Set<string>();
+  private readonly preloaded = new Set<string>();
 
   constructor(container: HTMLElement) {
     this.viewer = createViewer({ container });
     this.baseLayers = new BaseLayers(this.viewer);
-    this.baseLayers.onChange((s) => (baseLayerStatus.value = s));
     this.aircraft = new AircraftLayer(this.viewer, aircraftStore);
     this.aircraft.models = new ModelPool(this.viewer.scene);
+    this.ground = new GroundHeights(
+      this.viewer,
+      () => this.baseLayers.googleTileset,
+      () => [this.aircraft.billboards, this.aircraft.labels],
+    );
+    this.phases = new PhaseTracker(aircraftStore, this.ground);
+    this.airportsLayer = new AirportLayer(this.viewer);
     this.feed = new LiveFeed(this.viewer);
     this.cameras = new CameraRig(this.viewer, this.aircraft);
 
+    this.baseLayers.onChange((s) => {
+      baseLayerStatus.value = s;
+      this.ground.setLayer(s.kind);
+      this.airportsLayer.setLayer(s.kind);
+    });
+
+    // Render height = pressure altitude + a per-airport correction (geoid + terrain model + QNH), so aircraft land on
+    // the runway that is actually drawn. On the ground: the rendered airfield surface.
+    let dt = 0.016;
+    this.aircraft.heightFn = (a, pose) => {
+      const t = this.phases.get(a.hex);
+      if (pose.altFt === null) {
+        if (t?.ref) return this.ground.groundM(t.ref, t.runway?.end.elevFt ?? t.ref.elevFt);
+        const h = this.viewer.scene.globe.show ? this.viewer.scene.globe.getHeight(Cartographic.fromDegrees(pose.lon, pose.lat)) : undefined;
+        return h ?? 0;
+      }
+      const hM = pose.altFt * FT_TO_M + this.phases.offsetFor(a.hex, dt);
+      // Never render an airborne aircraft below its airfield surface.
+      return t?.ref ? Math.max(hM, this.ground.groundM(t.ref) + 2) : hM;
+    };
+
     const pre = () => {
       const now = nowMs();
+      dt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0.016;
+      this.lastFrame = now;
+      if (this.aircraft.models) this.aircraft.models.silhouettes = cameraMode.value === 'free' || cameraMode.value === 'orbit' || cameraMode.value === 'chase';
       this.aircraft.update(now);
       if (!this.cameras.update(now)) {
         // The followed aircraft disappeared from the feed (landed and stopped reporting, or out of coverage).
@@ -58,31 +105,127 @@ export class SceneController {
       }),
     );
 
+    // Phase changes of the followed / selected flight drive tile preloading and camera suggestions.
+    this.disposers.push(this.phases.onPhaseChange((hex, prev, next) => this.onPhase(hex, prev, next)));
+
     this.handler = new ScreenSpaceEventHandler(this.viewer.scene.canvas);
     this.handler.setInputAction((e: { position: Cartesian2 }) => {
       const hex = this.aircraft.pick(e.position);
-      selectedHex.value = hex ?? null;
+      if (followHex.value && hex !== followHex.value) return; // taps while following do not change selection
+      selectedHex.value = hex ?? (followHex.value ? selectedHex.value : null);
     }, ScreenSpaceEventType.LEFT_CLICK);
   }
 
-  /** Set up the tower / runway-end camera for an aircraft near an airport. Implemented with airport presets (M4). */
-  prepareGroundCamera(_hex: string, _mode: 'tower' | 'runway'): boolean {
-    return false;
+  private onPhase(hex: string, _prev: FlightPhase | undefined, next: FlightPhase) {
+    const watched = hex === followHex.value || hex === selectedHex.value;
+    if (!watched) return;
+    const a = aircraftStore.get(hex);
+    const t = this.phases.get(hex);
+    if (next === 'descent' || next === 'approach') {
+      // Pre-load the destination airport's tiles: route destination if known, else the runway we are lined up with.
+      const info = flightInfo.value[hex];
+      const destIcao = typeof info === 'object' ? info.destination?.icao : undefined;
+      const dest = this.phases.airportIndex?.get(destIcao) ?? t?.runway?.airport;
+      if (dest) this.preloadAirport(dest);
+    }
+    if ((next === 'approach' || next === 'takeoff_roll') && hex === followHex.value && !this.suggested.has(`${hex}:${next}`)) {
+      this.suggested.add(`${hex}:${next}`);
+      const where = t?.runway ? ` at ${t.runway.airport.iata ?? t.runway.airport.ident}` : '';
+      const label = a?.state.callsign ?? hex.toUpperCase();
+      toast(
+        next === 'approach'
+          ? `${label} is on approach${where} — try the Tower or Runway camera.`
+          : `${label} is rolling for takeoff${where} — try the Runway camera.`,
+        'info',
+        6000,
+      );
+    }
+  }
+
+  private preloadAirport(airport: Airport) {
+    if (this.preloaded.has(airport.ident)) return;
+    this.preloaded.add(airport.ident);
+    void this.ground.preload(airport);
+  }
+
+  /** Set up the tower / runway-end camera for an aircraft near an airport. Returns false if none applies. */
+  prepareGroundCamera(hex: string, mode: 'tower' | 'runway'): boolean {
+    this.phases.tick();
+    const t = this.phases.get(hex);
+    const m = t?.runway;
+    if (!t || !m || m.distToEndM > 25_000) return false;
+    const arrival = t.phase === 'approach' || t.phase === 'landing' || t.phase === 'descent';
+    // m.end is the runway end aligned with the aircraft's track: the landing threshold, or the end it departs from.
+    const vp = mode === 'tower' ? towerViewpoint(m.airport, m.runway, m.end) : runwayViewpoint(m.airport, m.runway, m.end, arrival ? 'arrival' : 'departure');
+    const groundAtVp = this.ground.groundM(m.airport, vp.elevFt);
+    const position = Cartesian3.fromDegrees(vp.lon, vp.lat, groundAtVp + vp.heightAglM);
+    this.cameras.groundCamera = { position, label: vp.label };
+    this.preloadAirport(m.airport);
+    // Lift the camera above any building the photoreal tiles have at that spot.
+    void this.ground.sampleAt(vp.lat, vp.lon).then((h) => {
+      if (h !== undefined && h + 3 > groundAtVp + vp.heightAglM && this.cameras.groundCamera?.label === vp.label) {
+        this.cameras.groundCamera = { position: Cartesian3.fromDegrees(vp.lon, vp.lat, h + 12), label: vp.label };
+      }
+    });
+    return true;
   }
 
   async start() {
     this.feed.start();
+    this.phases.start();
+    void loadAirports().then((a) => {
+      this.phases.setAirports(a);
+      this.airportsLayer.setAirports(a);
+    });
+    await this.initTiles();
+  }
+
+  private photorealAttempted = false;
+
+  /** One tiles session per page load (one billable Google root request at most). */
+  private async initTiles() {
+    const wantPhotoreal = readPref('photoreal', true) && canUseFeature('airport_views');
+    this.photorealAttempted = wantPhotoreal;
+    const session = wantPhotoreal ? await api.tilesSession().catch(() => undefined) : undefined;
+    const ionToken = env.cesiumIonToken ?? session?.ionToken;
     await this.baseLayers.init({
-      allowed: false,
-      deniedReason: 'Photorealistic tiles not configured yet',
-      ionToken: env.cesiumIonToken,
+      allowed: !!session?.allowed && (session.mode === 'google' ? !!session.googleKey : !!ionToken),
+      googleKey: session?.mode === 'google' ? session.googleKey : undefined,
+      ionToken,
+      deniedReason: !wantPhotoreal
+        ? canUseFeature('airport_views')
+          ? 'Photorealistic 3D turned off in settings'
+          : 'Photorealistic 3D is a Pro feature'
+        : (session?.reason ?? 'Photorealistic tiles unavailable'),
+      cacheBytes: 384 * 1024 * 1024,
+      maximumScreenSpaceError: 16,
+    });
+    // If the user upgrades mid-session (freemium), switch to photoreal without reloading.
+    this.disposers.push(
+      effect(() => {
+        void featureContext.value;
+        if (!this.photorealAttempted && canUseFeature('airport_views') && readPref('photoreal', true)) void this.upgradeTiles();
+      }),
+    );
+  }
+
+  private async upgradeTiles() {
+    this.photorealAttempted = true;
+    const session = await api.tilesSession().catch(() => undefined);
+    if (!session?.allowed) return;
+    await this.baseLayers.tryGoogle({
+      allowed: true,
+      googleKey: session.mode === 'google' ? session.googleKey : undefined,
+      ionToken: env.cesiumIonToken ?? session.ionToken,
     });
   }
 
   destroy() {
     this.feed.stop();
+    this.phases.stop();
     this.handler?.destroy();
     for (const d of this.disposers) d();
+    this.airportsLayer.destroy();
     this.aircraft.destroy();
     if (!this.viewer.isDestroyed()) this.viewer.destroy();
   }

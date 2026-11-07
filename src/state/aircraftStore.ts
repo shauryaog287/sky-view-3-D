@@ -58,7 +58,8 @@ export class AircraftStore {
           t: fixT,
           lat: s.lat,
           lon: s.lon,
-          altFt: s.onGround ? null : (s.altGeom ?? s.altBaro ?? null),
+          // Pressure altitude: comparable with airport elevations (MSL); render heights add a per-airport offset.
+          altFt: s.onGround ? null : (s.altBaro ?? s.altGeom ?? null),
           gsKt: s.gs,
           track: s.track,
           vrateFpm: s.vrate,

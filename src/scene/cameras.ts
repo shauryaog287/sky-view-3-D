@@ -219,12 +219,12 @@ export class CameraRig {
     const right = Cartesian3.normalize(Cartesian3.cross(dir, up, new Cartesian3()), new Cartesian3());
     const trueUp = Cartesian3.cross(right, dir, new Cartesian3());
     camera.setView({ destination: g.position, orientation: { direction: dir, up: trueUp } });
-    // Zoom like a real tower camera: keep the aircraft about a fifth of the screen tall.
+    // Zoom like a spotter's camera: frame the aircraft, but never narrower than 10° so the horizon stays in view.
     const dist = Cartesian3.distance(g.position, f.position);
     const size = CLASS_SIZE[f.a.modelClass].length;
     const fr = camera.frustum;
     if (fr instanceof PerspectiveFrustum) {
-      fr.fov = clamp(2 * Math.atan((size * 2.5) / Math.max(1, dist)), CesiumMath.toRadians(4), DEFAULT_FOV);
+      fr.fov = clamp(2 * Math.atan((size * 3) / Math.max(1, dist)), CesiumMath.toRadians(10), DEFAULT_FOV);
       fr.near = 1;
     }
   }

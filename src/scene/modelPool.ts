@@ -24,6 +24,8 @@ export class ModelPool {
   /** Followed/selected aircraft keep their model up to this distance. */
   focusDistance = 400_000;
   shadows = false;
+  /** Selection outline. Turned off for zoomed ground cameras (narrow FOV makes Cesium's silhouette pass ring). */
+  silhouettes = true;
   /** Aircraft whose model must not be drawn (e.g. the one we are sitting in for the cockpit view). */
   readonly hidden = new Set<string>();
   private readonly active = new Map<string, Slot>();
@@ -65,7 +67,7 @@ export class ModelPool {
         slot.model.colorBlendAmount = al?.color ? 0.22 : 0;
       }
       const sel = hex === selected || hex === followed;
-      slot.model.silhouetteSize = sel ? 2 : 0;
+      slot.model.silhouetteSize = sel && this.silhouettes ? 2 : 0;
       slot.model.silhouetteColor = SELECT_COLOR;
       slot.model.shadows = this.shadows ? ShadowMode.ENABLED : ShadowMode.DISABLED;
       aircraftModelMatrix(f.position, f.pose.heading, f.pose.pitch, f.pose.roll, slot.model.modelMatrix);

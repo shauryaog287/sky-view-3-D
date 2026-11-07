@@ -5,6 +5,7 @@ import { Router, corsHeaders, errorResponse, json, withHeaders } from './lib/htt
 import { registerConfigRoutes } from './routes/config';
 import { registerFlightRoutes } from './routes/flights';
 import { registerInfoRoutes } from './routes/info';
+import { registerTilesRoutes } from './routes/tiles';
 import { runScheduled } from './scheduled';
 
 export { FlightHub } from './flightHub';
@@ -13,6 +14,7 @@ const router = new Router<Ctx>();
 registerConfigRoutes(router);
 registerFlightRoutes(router);
 registerInfoRoutes(router);
+registerTilesRoutes(router);
 
 const DEFAULT_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4173'];
 
