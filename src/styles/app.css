@@ -1023,3 +1023,41 @@ select {
   color: var(--accent);
   font-weight: 600;
 }
+
+/* ── Legal pages inside the app ───────────────────────────────────────────── */
+.legal-body {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.legal-body h2 {
+  font-size: 16px;
+  margin: 18px 0 6px;
+}
+.legal-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.legal-body th,
+.legal-body td {
+  text-align: left;
+  vertical-align: top;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--panel-border);
+}
+.legal-body a {
+  color: var(--accent);
+}
+.legal-body .todo {
+  background: rgba(255, 181, 71, 0.12);
+  border: 1px solid rgba(255, 181, 71, 0.5);
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+.legal-body .meta {
+  color: var(--text-dim);
+}
+.fineprint a {
+  color: var(--text-dim);
+}

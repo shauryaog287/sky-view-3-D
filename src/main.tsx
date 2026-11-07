@@ -3,6 +3,7 @@ import { App } from './app';
 import { loadConfigAndEntitlements, handleDeepLink } from './state/bootstrap';
 import { initAuth } from './lib/auth';
 import { initAnalytics } from './lib/analytics';
+import { initInstall } from './lib/install';
 import './styles/app.css';
 
 declare const CESIUM_BASE_URL: string;
@@ -11,6 +12,7 @@ declare const CESIUM_BASE_URL: string;
 render(<App />, document.getElementById('app')!);
 void initAuth().then(loadConfigAndEntitlements);
 initAnalytics();
+initInstall();
 void handleDeepLink();
 
 // Service worker: offline app shell + Web Push. Registered only in production builds.

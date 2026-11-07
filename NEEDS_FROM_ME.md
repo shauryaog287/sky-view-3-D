@@ -5,17 +5,41 @@ items fall back to mocks, recorded fixtures or cheaper layers. Work top to botto
 and which variable to fill. Secrets go in `worker/.dev.vars` locally and `wrangler secret put NAME` in production;
 public values go in `.env.local` (frontend) or `worker/wrangler.toml` `[vars]`.
 
+## Checklist at a glance
+
+| # | Item | Needed for | Priority |
+| --- | --- | --- | --- |
+| 1 | Cloudflare account, D1 database, Pages project | Deploying anything | **Now** |
+| 2 | Email airplanes.live for API access | More live coverage | Now (5 min) |
+| 3 | Google Maps Platform key (Map Tiles API) + quota | Photorealistic 3D airports | Now |
+| 4 | Cesium ion token | Better fallback terrain/imagery | Now |
+| 10 | OpenSky account (OAuth client) | More coverage, zoomed-out views | Now |
+| 6 | VAPID keys (`npm run vapid:generate`) | Alerts while the app is closed | Now (2 min) |
+| 7 | Supabase project + Google OAuth client | Sign-in, saved subscriptions | Before testing accounts |
+| 8 | Razorpay account — **test mode** | Testing subscriptions | Before testing payments |
+| 9 | Analytics admin token (optional) | Reading usage counts | Any time |
+| 11 | Legal review of Privacy/Terms + your entity details | Publishing / Play Store | Before public launch |
+| 14 | Custom domain | Branding, Play Store asset links | Before public launch |
+| 5, 12 | Commercial weather + **licensed flight data** | Charging money | Before `LAUNCH_MODE=freemium` |
+| 13 | Google Play developer account + billing decision | Android app | Later |
+
 ## 1. Cloudflare account (required to deploy)
 1. Sign up at https://dash.cloudflare.com/sign-up (free plan is enough to start; Durable Objects with SQLite storage
    are available on the free plan).
 2. On your machine: `npx wrangler login`.
-3. Create the database and KV namespace, then paste the printed ids into `worker/wrangler.toml`:
+3. Create the database, then paste the printed id into `worker/wrangler.toml` (`[[d1_databases]] database_id`):
    ```bash
-   npx wrangler d1 create skyview           # → [[d1_databases]] database_id
-   npx wrangler kv namespace create CACHE   # → [[kv_namespaces]] id
+   npx wrangler d1 create skyview
    npm run db:migrate:remote
    ```
 4. Create the Pages project once: `npx wrangler pages project create skyview-3d --production-branch main`.
+5. `npm run deploy:api`, note the Worker URL, put `VITE_API_BASE=<that URL>` in `.env.production.local`, then
+   `npm run deploy:web`. Add the Pages URL (and later your domain) to `ALLOWED_ORIGINS` in `worker/wrangler.toml`.
+6. Expect the **Workers Paid plan ($5/month)** once real traffic arrives: D1 writes for track history exceed the free
+   100k rows/day with a few hundred visible aircraft (see DECISIONS D-021).
+7. For the GitHub "Deploy" workflow: create an API token (My Profile → API Tokens → *Edit Cloudflare Workers* template,
+   plus *Cloudflare Pages: Edit* and *D1: Edit*), then add repository secrets `CLOUDFLARE_API_TOKEN`,
+   `CLOUDFLARE_ACCOUNT_ID` and variable `VITE_API_BASE`.
 
 ## 2. airplanes.live access (optional, improves coverage)
 - Their API now answers `403 Please contact us…` to unregistered clients. Email **contact@airplanes.live** with: a link
@@ -97,4 +121,33 @@ public values go in `.env.local` (frontend) or `worker/wrangler.toml` `[vars]`.
 - Plausible instead: `VITE_ANALYTICS=plausible`, `VITE_PLAUSIBLE_DOMAIN=<your domain>` (add the site at plausible.io).
 - PostHog instead: `VITE_ANALYTICS=posthog`, `VITE_POSTHOG_KEY=phc_...`, `VITE_POSTHOG_HOST=https://eu.i.posthog.com`.
 
-_(More items are added as milestones land.)_
+## 10. OpenSky Network (optional, more coverage)
+1. Register at https://opensky-network.org/ (free account).
+2. Account page → **API Client** → create a client → you get a `client_id` and `client_secret` (OAuth2 client
+   credentials; basic auth is no longer accepted).
+3. `npx wrangler secret put OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET` (`--config worker/wrangler.toml`), or put
+   them in `worker/.dev.vars`. Default budget assumes 4,000 credits/day (`OPENSKY_DAILY_CREDITS`); contributors who feed
+   data get 8,000.
+
+## 11. Legal (before public launch)
+- `public/legal/privacy.html` and `terms.html` are **templates**. Fill the bracketed placeholders (legal entity,
+  address, grievance officer, contact emails, refund policy, governing city) and have a lawyer review them (India DPDP
+  Act 2023; GDPR if you serve EU users).
+- Decide the code licence (README says "all rights reserved" until you choose).
+- Airline names and approximate brand colours are used only to identify flights; no logos or liveries are shipped.
+
+## 12. Licensed flight data (before charging money)
+- adsb.lol, airplanes.live and OpenSky are **non-commercial**. Before `LAUNCH_MODE=freemium` with live payments, sign
+  a commercial feed (e.g. FlightAware AeroAPI, Aviation Edge, ADS-B Exchange Enterprise, Spire, Cirium), implement it in
+  `worker/src/providers/commercialStub.ts`, then set `PROVIDERS=commercial` (or `commercial,adsblol` during migration).
+- Also check Cesium ion's commercial terms if you use ion layers in a paid product, and Google Maps Platform terms
+  (attribution and caching rules are already respected: no tile caching, credits always visible).
+
+## 13. Android app (later)
+- Google Play developer account, then follow `docs/android-twa.md` (Bubblewrap, Digital Asset Links).
+- **Decision needed:** Play's payments policy for in-app digital subscriptions (Play Billing vs. India user choice
+  billing vs. selling only on the website). See the warning in `docs/android-twa.md`.
+
+## 14. Domain
+- Buy a domain, add it to the Pages project (Pages → Custom domains), add it to `ALLOWED_ORIGINS`, the Google API key
+  referrer list, the Cesium ion token's allowed URLs, Supabase redirect URLs and the Razorpay webhook URL.

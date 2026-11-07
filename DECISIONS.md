@@ -236,3 +236,17 @@ Short architecture decision records. Newest decisions are appended at the bottom
   totals every minute / on tab hide to `/api/events`; the Worker adds them to daily rows in D1. No cookies, no ids,
   no IPs. `GET /api/admin/usage?days=30` (Bearer `ADMIN_TOKEN`) shows what people actually use — the data for deciding
   what to lock later. Plausible or PostHog can be switched on via `VITE_ANALYTICS`. Opt-out toggle, DNT and GPC respected.
+
+## D-027 · PWA, hosting and deploy
+- `vite-plugin-pwa` in injectManifest mode with our own `src/sw.ts`: precaches the built shell (incl. the ~4 MB
+  Cesium chunk, models, airports, legal pages), caches Cesium's static assets on first use, and never caches `/api/*`.
+  Verified by e2e: the page is SW-controlled and reloads offline. (Lighthouse removed its PWA category in v12, so
+  installability is checked directly: manifest fields, 192/512/maskable icons, SW control, offline reload.)
+- Frontend on Cloudflare Pages, API on a separate Worker. The frontend calls the Worker URL (`VITE_API_BASE`) with
+  CORS (`ALLOWED_ORIGINS`) rather than a Pages Function proxy: fewer moving parts. Put both behind one custom domain
+  later (Worker route `/api/*`) to drop CORS entirely.
+- `public/_headers` sets security headers and immutable caching for hashed assets. No CSP yet: Cesium workers, Google
+  tiles, Cesium ion, Razorpay Checkout and Supabase each need allowances — add one once the domains are final.
+- Data attributions are injected into Cesium's credit bar (`src/scene/credits.ts`), so they sit with the Google/ion
+  credits and are never covered by UI. Legal pages are plain HTML under `/legal/` (work without JS; Play Store needs a
+  privacy-policy URL) and are also shown in-app.

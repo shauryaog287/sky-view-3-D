@@ -1,0 +1,22 @@
+# Cloudflare Pages response headers.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(self "https://checkout.razorpay.com" "https://api.razorpay.com")
+  X-Frame-Options: SAMEORIGIN
+
+# Hashed build output never changes.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/cesiumStatic/*
+  Cache-Control: public, max-age=604800
+
+/models/*
+  Cache-Control: public, max-age=604800
+
+# The service worker and manifest must always be revalidated so updates roll out.
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache

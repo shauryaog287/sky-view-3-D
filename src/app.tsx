@@ -10,6 +10,7 @@ import { AlertSheet } from './ui/AlertSheet';
 import { AccountSheet } from './ui/AccountSheet';
 import { UpsellSheet, MockCheckoutSheet } from './ui/UpsellSheet';
 import { AdSlot } from './ui/AdSlot';
+import { LegalSheet } from './ui/LegalSheet';
 import { settingsOpen } from './state/settings';
 
 export function App() {
@@ -37,6 +38,7 @@ export function App() {
       <AccountSheet />
       <UpsellSheet />
       <MockCheckoutSheet />
+      <LegalSheet />
       <AdSlot placement="map-corner" />
       <Toasts />
       <WebglErrorScreen />

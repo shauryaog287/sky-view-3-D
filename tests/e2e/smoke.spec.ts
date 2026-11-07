@@ -144,3 +144,38 @@ test('freemium mode: locked feature → upsell → sign in → test checkout →
   await expect(page.getByTestId('replay-bar')).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('PWA: installable manifest, service worker and offline app shell', async ({ page, context }) => {
+  const errors = await boot(page);
+  const manifest = await page.evaluate(async () => {
+    const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    return link ? ((await (await fetch(link.href)).json()) as { name: string; display: string; start_url: string; icons: { sizes: string; purpose?: string }[] }) : null;
+  });
+  expect(manifest).not.toBeNull();
+  expect(manifest!.display).toBe('standalone');
+  expect(manifest!.icons.map((i) => i.sizes)).toEqual(expect.arrayContaining(['192x192', '512x512']));
+  expect(manifest!.icons.some((i) => i.purpose === 'maskable')).toBe(true);
+  await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
+  await page.reload();
+  await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller), { timeout: 30_000 }).toBe(true);
+  // Offline: the shell still loads from the service worker (mock data even keeps flying in mock mode).
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByTestId('globe').locator('canvas').first()).toBeVisible();
+  await context.setOffline(false);
+  expect(errors).toEqual([]);
+});
+
+test('legal pages are reachable in-app and as plain web pages', async ({ page }) => {
+  await boot(page);
+  await page.getByTestId('open-settings').click();
+  await page.getByRole('button', { name: 'Privacy policy' }).click();
+  await expect(page.getByTestId('legal-privacy')).toContainText('What we collect');
+  await page.keyboard.press('Escape');
+  for (const p of ['privacy', 'terms', 'sources']) {
+    const res = await page.request.get(`/legal/${p}.html`);
+    expect(res.ok()).toBe(true);
+  }
+  // Data attributions are always visible in the map credit bar.
+  await expect(page.locator('.cesium-widget-credits')).toContainText('Data:');
+});

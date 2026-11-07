@@ -7,8 +7,27 @@ Legend: ✅ done · 🔄 in progress · ⏳ not started · ⛔ blocked (see NEED
 | M1 Scaffold, globe, fallback tiles, CI, tests | ✅ | Offline Natural Earth globe works with zero keys |
 | M2 Backend, providers, caching, live aircraft | ✅ | Live adsb.lol data verified end-to-end through `wrangler dev`; airplanes.live ⛔ needs approval email |
 | M3 Motion, models, cameras, info panel, search | ✅ | Chase / orbit / cockpit verified in headless Chromium (tablet + phone); adsbdb enrichment live |
-| M4 Airports, phase detection, takeoff/landing, Google tiles | ✅ | Tower/runway cams verified on the scripted DEL 28 arrival. Google tiles path is coded but ⛔ untested without a key (NEEDS_FROM_ME §3) |
-| M5 Weather/sky, quality, performance | ✅ | Haze fog verified with live Delhi METAR (1.1 km HZ); clouds at METAR base; settings sheet. GPU perf on a real Android device still to be measured |
-| M6 Track storage, replay, alerts | ✅ | D1 track write/read + cron verified under `wrangler dev`; push crypto verified vs RFC 8291; real push delivery ⛔ needs VAPID keys + a device (NEEDS_FROM_ME §6) |
-| M7 Auth, feature flags, paywall (off), Razorpay test, analytics | ✅ | Paywall flow verified end-to-end in mock mode (e2e); JWT + Razorpay signatures/webhooks unit-tested. Real Supabase/Razorpay round-trips ⛔ need accounts (NEEDS_FROM_ME §7–8) |
-| M8 PWA polish, legal, deploy, README | 🔄 | Service worker, manifest and icons landed with M6 (push needs them) |
+| M4 Airports, phase detection, takeoff/landing, Google tiles | ✅ | Tower/runway cams verified on the scripted DEL 28 arrival. Google tiles path coded but ⛔ untested without a key |
+| M5 Weather/sky, quality, performance | ✅ | Haze fog verified with live Delhi METAR (1.1 km HZ); clouds at METAR base; settings sheet |
+| M6 Track storage, replay, alerts | ✅ | D1 track write/read + cron verified under `wrangler dev`; push crypto verified vs RFC 8291 |
+| M7 Auth, feature flags, paywall (off), Razorpay test, analytics | ✅ | Paywall flow verified end-to-end in mock mode; JWT + Razorpay signatures/webhooks unit-tested |
+| M8 PWA polish, legal, deploy, README | ✅ | Installable + offline shell verified by e2e; legal pages; deploy scripts + manual workflow; README |
+
+## Test status (last run)
+- `npm run typecheck` — clean (web, worker, scripts).
+- `npm test` — 23 files / 95 tests passing.
+- `npm run test:e2e` — 20 tests (10 flows × tablet + phone) passing against the mock-mode production build.
+
+## Not yet verified (needs keys, accounts or a real device)
+- ⛔ Google Photorealistic 3D Tiles rendering, session caps against real Google billing, tile preloading, curated
+  tower/runway camera positions over real photogrammetry (NEEDS_FROM_ME §3).
+- ⛔ Cesium ion terrain/imagery layer (§4) and OpenSky provider against the real API (§10; unit-tested with fakes).
+- ⛔ Real Web Push delivery to a phone (§6), Supabase sign-in (§7), Razorpay test checkout + webhooks (§8).
+- ⛔ GPU frame rate on a mid-range Android device (CPU side measured: ~0.12 ms/frame for 200 aircraft).
+- airplanes.live returns 403 until access is granted (§2).
+
+## Known limitations / next steps
+- Community ADS-B coverage over India is sparse (D-008); a licensed feed is the real fix (§12).
+- The main JS chunk is ~4.2 MB (CesiumJS); fine for a cached PWA, but a lazy-loaded split would speed up first load.
+- Cloud layer is an approximation (cumulus billboards), not volumetric weather.
+- No CSP header yet (D-027).

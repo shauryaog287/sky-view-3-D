@@ -13,6 +13,7 @@ import { SkyController, cartoDeg } from './sky';
 import { WeatherWatcher } from './weatherWatcher';
 import { ReplayController } from './replay';
 import { AlertMonitor } from './alertMonitor';
+import { installDataCredits, trackCreditBarHeight } from './credits';
 import { QUALITY, type QualityLevel } from '../config/quality';
 import { photoreal, quality, showLabels, weatherOn } from '../state/settings';
 import { env } from '../config/env';
@@ -82,6 +83,8 @@ export class SceneController {
       if (ap && m?.altimeterHpa) this.ground.setQnh(ap.ident, m.altimeterHpa);
     });
 
+    this.disposers.push(installDataCredits(this.viewer));
+    this.disposers.push(trackCreditBarHeight(this.viewer));
     this.baseLayers.onChange((s) => {
       baseLayerStatus.value = s;
       this.ground.setLayer(s.kind);

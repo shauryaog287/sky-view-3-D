@@ -8,6 +8,7 @@ import { legalPage } from '../state/legal';
 import { api } from '../api';
 import { readPref, writePref } from '../lib/device';
 import { loadConfigAndEntitlements } from '../state/bootstrap';
+import { installAvailable, isIos, isStandalone, promptInstall } from '../lib/install';
 
 export function SettingsSheet() {
   if (!settingsOpen.value) return null;
@@ -74,6 +75,14 @@ export function SettingsSheet() {
       )}
 
       <div class="link-list">
+        {installAvailable.value && (
+          <button class="btn primary" onClick={() => void promptInstall()} data-testid="install-app">
+            Install SkyView 3D app
+          </button>
+        )}
+        {!installAvailable.value && !isStandalone.value && isIos() && (
+          <p class="hint">To install on iPhone/iPad: tap Share, then “Add to Home Screen”.</p>
+        )}
         <button class="btn" onClick={() => ((settingsOpen.value = false), (accountOpen.value = true))} data-testid="open-account">
           Account & subscription
         </button>
