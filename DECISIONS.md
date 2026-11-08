@@ -332,3 +332,6 @@ Short architecture decision records. Newest decisions are appended at the bottom
 - Test hook: in mock mode `?fake3d=1` loads a stand-in tileset (`tests/fixtures/fake3d`, built by
   `scripts/build-fake-tileset.ts`) instead of Google's, so the clipping and flat-map paths can be checked without a
   key. Verified visually from high and low angles.
+
+## Project Lead
+- Developed and maintained by @shauryaog287
