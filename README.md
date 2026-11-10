@@ -48,6 +48,9 @@ npm run dev                                      # frontend on http://localhost:
 | Replay | `src/motion/hermite.ts`, `src/scene/replay.ts` | 60 min from D1 track points |
 | Alerts | `shared/alertRules.ts`, `worker/src/alerts/`, `worker/src/push/webpush.ts` | cron + Web Push (RFC 8291) |
 | Auth & billing | `worker/src/auth.ts`, `worker/src/billing/` | Supabase JWT, Razorpay (test mode only), Stripe stub |
+| 3D terrain | `src/scene/openTerrain.ts`, `shared/terrainFlatten.ts` | open elevation tiles, airports flattened to field elevation |
+| Airport scenery | `shared/airportMesh.ts`, `shared/airportLights.ts`, `src/scene/airport3dLayer.ts` | procedural architecture + airfield lighting from OpenStreetMap; 256 airports pre-built (`npm run data:airport3d -- --all`) |
+| Airline paint, aircraft lights | `shared/liveries.ts`, `src/scene/modelPool.ts`, `src/scene/aircraftLights.ts` | colour schemes per airline (no logos), strobes, beacons, landing lights |
 | Aircraft models | `scripts/build-models.ts` → `public/models/types/*.glb`, `shared/aircraftModels.json` | one model per ICAO type (53), airline tail colour, retracting gear; `npm run models:import` for licensed photoreal models |
 
 Docs: [PLAN.md](PLAN.md) · [PROGRESS.md](PROGRESS.md) · [DECISIONS.md](DECISIONS.md) ·

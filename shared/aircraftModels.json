@@ -3,7 +3,7 @@
  "models": {
   "a19n": {
    "file": "types/a19n.glb",
-   "rev": "c800cf5668",
+   "rev": "566fc4c690",
    "name": "Airbus A319neo",
    "cls": "narrowbody",
    "length": 33.84,
@@ -11,11 +11,38 @@
    "height": 11.36,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -4.93,
+     17.1,
+     4.08
+    ],
+    "tail": [
+     -17.02,
+     0,
+     4.76
+    ],
+    "top": [
+     2.39,
+     0,
+     5.95
+    ],
+    "belly": [
+     0.38,
+     0,
+     1.3
+    ],
+    "land": [
+     3.6,
+     2.47,
+     2.68
+    ]
+   },
    "source": "generated"
   },
   "a20n": {
    "file": "types/a20n.glb",
-   "rev": "b4b48fa06c",
+   "rev": "43773bd211",
    "name": "Airbus A320neo",
    "cls": "narrowbody",
    "length": 37.57,
@@ -23,11 +50,38 @@
    "height": 11.36,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -3.88,
+     17.1,
+     4.08
+    ],
+    "tail": [
+     -18.89,
+     0,
+     4.76
+    ],
+    "top": [
+     3.44,
+     0,
+     5.95
+    ],
+    "belly": [
+     1.43,
+     0,
+     1.3
+    ],
+    "land": [
+     4.64,
+     2.47,
+     2.68
+    ]
+   },
    "source": "generated"
   },
   "a21n": {
    "file": "types/a21n.glb",
-   "rev": "91f7d19cef",
+   "rev": "45dcc41cd8",
    "name": "Airbus A321neo",
    "cls": "narrowbody",
    "length": 44.51,
@@ -35,11 +89,38 @@
    "height": 11.36,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -3.54,
+     17.1,
+     4.08
+    ],
+    "tail": [
+     -22.35,
+     0,
+     4.76
+    ],
+    "top": [
+     3.72,
+     0,
+     5.95
+    ],
+    "belly": [
+     1.65,
+     0,
+     1.3
+    ],
+    "land": [
+     4.96,
+     2.47,
+     2.68
+    ]
+   },
    "source": "generated"
   },
   "a319": {
    "file": "types/a319.glb",
-   "rev": "9b524abc8e",
+   "rev": "5f7707e68f",
    "name": "Airbus A319",
    "cls": "narrowbody",
    "length": 33.84,
@@ -47,11 +128,38 @@
    "height": 11.36,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -4.93,
+     17.1,
+     4.08
+    ],
+    "tail": [
+     -17.02,
+     0,
+     4.76
+    ],
+    "top": [
+     2.39,
+     0,
+     5.95
+    ],
+    "belly": [
+     0.38,
+     0,
+     1.3
+    ],
+    "land": [
+     3.6,
+     2.47,
+     2.68
+    ]
+   },
    "source": "generated"
   },
   "a320": {
    "file": "types/a320.glb",
-   "rev": "b86c028184",
+   "rev": "b4e12c6f9b",
    "name": "Airbus A320",
    "cls": "narrowbody",
    "length": 37.57,
@@ -59,11 +167,38 @@
    "height": 11.36,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -3.88,
+     17.1,
+     4.08
+    ],
+    "tail": [
+     -18.89,
+     0,
+     4.76
+    ],
+    "top": [
+     3.44,
+     0,
+     5.95
+    ],
+    "belly": [
+     1.43,
+     0,
+     1.3
+    ],
+    "land": [
+     4.64,
+     2.47,
+     2.68
+    ]
+   },
    "source": "generated"
   },
   "a321": {
    "file": "types/a321.glb",
-   "rev": "8256297022",
+   "rev": "f05a1b6054",
    "name": "Airbus A321",
    "cls": "narrowbody",
    "length": 44.51,
@@ -71,11 +206,38 @@
    "height": 11.36,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -3.54,
+     17.1,
+     4.08
+    ],
+    "tail": [
+     -22.35,
+     0,
+     4.76
+    ],
+    "top": [
+     3.72,
+     0,
+     5.95
+    ],
+    "belly": [
+     1.65,
+     0,
+     1.3
+    ],
+    "land": [
+     4.96,
+     2.47,
+     2.68
+    ]
+   },
    "source": "generated"
   },
   "a332": {
    "file": "types/a332.glb",
-   "rev": "c71360ad4f",
+   "rev": "aca2bc1d88",
    "name": "Airbus A330-200",
    "cls": "widebody",
    "length": 58.82,
@@ -83,11 +245,38 @@
    "height": 16.73,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -12.13,
+     28.85,
+     6.11
+    ],
+    "tail": [
+     -29.51,
+     0,
+     6.37
+    ],
+    "top": [
+     3.17,
+     0,
+     7.89
+    ],
+    "belly": [
+     -0.13,
+     0,
+     1.75
+    ],
+    "land": [
+     5.15,
+     3.53,
+     3.58
+    ]
+   },
    "source": "generated"
   },
   "a333": {
    "file": "types/a333.glb",
-   "rev": "e6a2f73553",
+   "rev": "76b6bccdab",
    "name": "Airbus A330-300",
    "cls": "widebody",
    "length": 63.66,
@@ -95,11 +284,38 @@
    "height": 16.73,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -10.96,
+     28.85,
+     6.11
+    ],
+    "tail": [
+     -31.93,
+     0,
+     6.37
+    ],
+    "top": [
+     4.34,
+     0,
+     7.89
+    ],
+    "belly": [
+     1.04,
+     0,
+     1.75
+    ],
+    "land": [
+     6.32,
+     3.53,
+     3.58
+    ]
+   },
    "source": "generated"
   },
   "a339": {
    "file": "types/a339.glb",
-   "rev": "7eace88928",
+   "rev": "326976ab1b",
    "name": "Airbus A330-900neo",
    "cls": "widebody",
    "length": 63.66,
@@ -107,11 +323,38 @@
    "height": 16.73,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -11.71,
+     30.05,
+     6.23
+    ],
+    "tail": [
+     -31.93,
+     0,
+     6.37
+    ],
+    "top": [
+     4.34,
+     0,
+     7.89
+    ],
+    "belly": [
+     1.04,
+     0,
+     1.75
+    ],
+    "land": [
+     6.32,
+     3.53,
+     3.58
+    ]
+   },
    "source": "generated"
   },
   "a343": {
    "file": "types/a343.glb",
-   "rev": "bf3aafacd4",
+   "rev": "6140978682",
    "name": "Airbus A340-300",
    "cls": "widebody",
    "length": 63.66,
@@ -119,11 +362,38 @@
    "height": 16.73,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -10.96,
+     28.85,
+     6.11
+    ],
+    "tail": [
+     -31.93,
+     0,
+     6.37
+    ],
+    "top": [
+     4.34,
+     0,
+     7.89
+    ],
+    "belly": [
+     1.04,
+     0,
+     1.75
+    ],
+    "land": [
+     6.32,
+     3.53,
+     3.58
+    ]
+   },
    "source": "generated"
   },
   "a346": {
    "file": "types/a346.glb",
-   "rev": "c98eef114e",
+   "rev": "08a452ebbf",
    "name": "Airbus A340-600",
    "cls": "widebody",
    "length": 75.36,
@@ -131,11 +401,38 @@
    "height": 16.73,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -10.49,
+     30.35,
+     6.26
+    ],
+    "tail": [
+     -37.78,
+     0,
+     6.37
+    ],
+    "top": [
+     5.44,
+     0,
+     7.89
+    ],
+    "belly": [
+     1.84,
+     0,
+     1.75
+    ],
+    "land": [
+     7.6,
+     3.53,
+     3.58
+    ]
+   },
    "source": "generated"
   },
   "a359": {
    "file": "types/a359.glb",
-   "rev": "6ab7802f76",
+   "rev": "07736ab74e",
    "name": "Airbus A350-900",
    "cls": "widebody",
    "length": 66.8,
@@ -143,11 +440,38 @@
    "height": 16.79,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -13.49,
+     30.55,
+     6.74
+    ],
+    "tail": [
+     -33.5,
+     0,
+     6.81
+    ],
+    "top": [
+     3.96,
+     0,
+     8.43
+    ],
+    "belly": [
+     0.24,
+     0,
+     1.85
+    ],
+    "land": [
+     6.19,
+     3.73,
+     3.83
+    ]
+   },
    "source": "generated"
   },
   "a35k": {
    "file": "types/a35k.glb",
-   "rev": "a0b7a0fe74",
+   "rev": "bc4e0d97da",
    "name": "Airbus A350-1000",
    "cls": "widebody",
    "length": 73.79,
@@ -155,11 +479,38 @@
    "height": 16.79,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -12.69,
+     30.55,
+     6.74
+    ],
+    "tail": [
+     -37,
+     0,
+     6.81
+    ],
+    "top": [
+     4.65,
+     0,
+     8.43
+    ],
+    "belly": [
+     0.81,
+     0,
+     1.85
+    ],
+    "land": [
+     6.95,
+     3.73,
+     3.83
+    ]
+   },
    "source": "generated"
   },
   "a388": {
    "file": "types/a388.glb",
-   "rev": "b190966061",
+   "rev": "84fdcbe5eb",
    "name": "Airbus A380-800",
    "cls": "widebody",
    "length": 72.72,
@@ -167,11 +518,38 @@
    "height": 22.61,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -16.76,
+     39.92,
+     8.16
+    ],
+    "tail": [
+     -36.46,
+     0,
+     8.28
+    ],
+    "top": [
+     7.08,
+     0,
+     10.98
+    ],
+    "belly": [
+     1.8,
+     0,
+     2.05
+    ],
+    "land": [
+     10.25,
+     4.46,
+     4.59
+    ]
+   },
    "source": "generated"
   },
   "at45": {
    "file": "types/at45.glb",
-   "rev": "7bda89b56c",
+   "rev": "0ca97c67f3",
    "name": "ATR 42",
    "cls": "turboprop",
    "length": 22.67,
@@ -179,11 +557,38 @@
    "height": 7.48,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     0.52,
+     12.34,
+     4.11
+    ],
+    "tail": [
+     -11.43,
+     0,
+     3.1
+    ],
+    "top": [
+     0.81,
+     0,
+     4.06
+    ],
+    "belly": [
+     0.03,
+     0,
+     0.7
+    ],
+    "land": [
+     1.27,
+     1.79,
+     3.64
+    ]
+   },
    "source": "generated"
   },
   "at76": {
    "file": "types/at76.glb",
-   "rev": "93208b1508",
+   "rev": "99e85528d1",
    "name": "ATR 72",
    "cls": "turboprop",
    "length": 27.17,
@@ -191,11 +596,38 @@
    "height": 7.48,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     0.77,
+     13.58,
+     4.15
+    ],
+    "tail": [
+     -13.68,
+     0,
+     3.1
+    ],
+    "top": [
+     1.12,
+     0,
+     4.06
+    ],
+    "belly": [
+     0.34,
+     0,
+     0.7
+    ],
+    "land": [
+     1.59,
+     1.79,
+     3.64
+    ]
+   },
    "source": "generated"
   },
   "b37m": {
    "file": "types/b37m.glb",
-   "rev": "3999eddd3d",
+   "rev": "caf2aef7d7",
    "name": "Boeing 737 MAX 7",
    "cls": "narrowbody",
    "length": 35.56,
@@ -203,11 +635,38 @@
    "height": 11.86,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -5.2,
+     17.2,
+     3.79
+    ],
+    "tail": [
+     -17.88,
+     0,
+     4.12
+    ],
+    "top": [
+     2.05,
+     0,
+     5.27
+    ],
+    "belly": [
+     0.19,
+     0,
+     0.75
+    ],
+    "land": [
+     3.17,
+     2.35,
+     2.13
+    ]
+   },
    "source": "generated"
   },
   "b38m": {
    "file": "types/b38m.glb",
-   "rev": "05e5f12f54",
+   "rev": "8f0c4060a3",
    "name": "Boeing 737 MAX 8",
    "cls": "narrowbody",
    "length": 39.47,
@@ -215,11 +674,38 @@
    "height": 11.86,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -4.18,
+     17.2,
+     3.79
+    ],
+    "tail": [
+     -19.83,
+     0,
+     4.12
+    ],
+    "top": [
+     3.07,
+     0,
+     5.27
+    ],
+    "belly": [
+     1.21,
+     0,
+     0.75
+    ],
+    "land": [
+     4.19,
+     2.35,
+     2.13
+    ]
+   },
    "source": "generated"
   },
   "b39m": {
    "file": "types/b39m.glb",
-   "rev": "0125c18166",
+   "rev": "a6308cafc5",
    "name": "Boeing 737 MAX 9/10",
    "cls": "narrowbody",
    "length": 42.16,
@@ -227,11 +713,38 @@
    "height": 11.86,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -3.63,
+     17.2,
+     3.79
+    ],
+    "tail": [
+     -21.18,
+     0,
+     4.12
+    ],
+    "top": [
+     3.62,
+     0,
+     5.27
+    ],
+    "belly": [
+     1.76,
+     0,
+     0.75
+    ],
+    "land": [
+     4.74,
+     2.35,
+     2.13
+    ]
+   },
    "source": "generated"
   },
   "b712": {
    "file": "types/b712.glb",
-   "rev": "1a965edfa9",
+   "rev": "446c279ac7",
    "name": "Boeing 717",
    "cls": "narrowbody",
    "length": 37.81,
@@ -239,11 +752,38 @@
    "height": 9.82,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -4.77,
+     14.28,
+     2.64
+    ],
+    "tail": [
+     -19.01,
+     0,
+     3.8
+    ],
+    "top": [
+     0.85,
+     0,
+     4.86
+    ],
+    "belly": [
+     -0.95,
+     0,
+     0.75
+    ],
+    "land": [
+     1.93,
+     2.09,
+     1.9
+    ]
+   },
    "source": "generated"
   },
   "b737": {
    "file": "types/b737.glb",
-   "rev": "b7c4acc3d6",
+   "rev": "f8e3cb0b03",
    "name": "Boeing 737-700",
    "cls": "narrowbody",
    "length": 33.63,
@@ -251,11 +791,38 @@
    "height": 11.86,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -5.41,
+     17.2,
+     3.79
+    ],
+    "tail": [
+     -16.92,
+     0,
+     4.12
+    ],
+    "top": [
+     1.84,
+     0,
+     5.27
+    ],
+    "belly": [
+     -0.02,
+     0,
+     0.75
+    ],
+    "land": [
+     2.96,
+     2.35,
+     2.13
+    ]
+   },
    "source": "generated"
   },
   "b738": {
    "file": "types/b738.glb",
-   "rev": "d8879470ca",
+   "rev": "9abe5d2a7a",
    "name": "Boeing 737-800",
    "cls": "narrowbody",
    "length": 39.47,
@@ -263,11 +830,38 @@
    "height": 11.86,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -4.18,
+     17.2,
+     3.79
+    ],
+    "tail": [
+     -19.83,
+     0,
+     4.12
+    ],
+    "top": [
+     3.07,
+     0,
+     5.27
+    ],
+    "belly": [
+     1.21,
+     0,
+     0.75
+    ],
+    "land": [
+     4.19,
+     2.35,
+     2.13
+    ]
+   },
    "source": "generated"
   },
   "b739": {
    "file": "types/b739.glb",
-   "rev": "804af56393",
+   "rev": "113fd0cc31",
    "name": "Boeing 737-900",
    "cls": "narrowbody",
    "length": 42.11,
@@ -275,11 +869,38 @@
    "height": 11.86,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -3.64,
+     17.2,
+     3.79
+    ],
+    "tail": [
+     -21.15,
+     0,
+     4.12
+    ],
+    "top": [
+     3.61,
+     0,
+     5.27
+    ],
+    "belly": [
+     1.75,
+     0,
+     0.75
+    ],
+    "land": [
+     4.73,
+     2.35,
+     2.13
+    ]
+   },
    "source": "generated"
   },
   "b744": {
    "file": "types/b744.glb",
-   "rev": "fdcbaba72f",
+   "rev": "1d638ce207",
    "name": "Boeing 747-400",
    "cls": "widebody",
    "length": 70.66,
@@ -287,11 +908,38 @@
    "height": 19.08,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -14.66,
+     30.55,
+     7.74
+    ],
+    "tail": [
+     -35.43,
+     0,
+     7.79
+    ],
+    "top": [
+     7.66,
+     0,
+     9.62
+    ],
+    "belly": [
+     3.31,
+     0,
+     2.1
+    ],
+    "land": [
+     10.27,
+     4.06,
+     4.39
+    ]
+   },
    "source": "generated"
   },
   "b748": {
    "file": "types/b748.glb",
-   "rev": "b48e40ed3b",
+   "rev": "5cc9ca1a9b",
    "name": "Boeing 747-8",
    "cls": "widebody",
    "length": 76.25,
@@ -299,11 +947,38 @@
    "height": 19.08,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -19.53,
+     34.25,
+     8.19
+    ],
+    "tail": [
+     -38.22,
+     0,
+     7.79
+    ],
+    "top": [
+     8.4,
+     0,
+     9.62
+    ],
+    "belly": [
+     3.84,
+     0,
+     2.1
+    ],
+    "land": [
+     11.14,
+     4.06,
+     4.39
+    ]
+   },
    "source": "generated"
   },
   "b752": {
    "file": "types/b752.glb",
-   "rev": "e4180b2702",
+   "rev": "1a5bec4879",
    "name": "Boeing 757-200",
    "cls": "narrowbody",
    "length": 47.32,
@@ -311,11 +986,38 @@
    "height": 13.12,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -4.5,
+     19.08,
+     4.53
+    ],
+    "tail": [
+     -23.76,
+     0,
+     4.67
+    ],
+    "top": [
+     3.4,
+     0,
+     5.82
+    ],
+    "belly": [
+     1.12,
+     0,
+     1.3
+    ],
+    "land": [
+     4.77,
+     2.35,
+     2.68
+    ]
+   },
    "source": "generated"
   },
   "b763": {
    "file": "types/b763.glb",
-   "rev": "3abab6fc34",
+   "rev": "a7deb5930d",
    "name": "Boeing 767-300",
    "cls": "widebody",
    "length": 54.94,
@@ -323,11 +1025,38 @@
    "height": 15.6,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -9.54,
+     23.84,
+     5.54
+    ],
+    "tail": [
+     -27.57,
+     0,
+     5.94
+    ],
+    "top": [
+     3.83,
+     0,
+     7.41
+    ],
+    "belly": [
+     1.07,
+     0,
+     1.5
+    ],
+    "land": [
+     5.49,
+     3.14,
+     3.27
+    ]
+   },
    "source": "generated"
   },
   "b772": {
    "file": "types/b772.glb",
-   "rev": "4d83c82adb",
+   "rev": "47c04c96b4",
    "name": "Boeing 777-200",
    "cls": "widebody",
    "length": 63.73,
@@ -335,11 +1064,38 @@
    "height": 18.28,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -12.6,
+     30.52,
+     6.87
+    ],
+    "tail": [
+     -31.96,
+     0,
+     7.01
+    ],
+    "top": [
+     4.19,
+     0,
+     8.65
+    ],
+    "belly": [
+     0.41,
+     0,
+     1.95
+    ],
+    "land": [
+     6.45,
+     3.88,
+     3.97
+    ]
+   },
    "source": "generated"
   },
   "b779": {
    "file": "types/b779.glb",
-   "rev": "7bdf1063b2",
+   "rev": "cd0f5c93c9",
    "name": "Boeing 777-9",
    "cls": "widebody",
    "length": 76.72,
@@ -347,11 +1103,38 @@
    "height": 18.28,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -16.69,
+     35.92,
+     7.43
+    ],
+    "tail": [
+     -38.46,
+     0,
+     7.01
+    ],
+    "top": [
+     5.75,
+     0,
+     8.65
+    ],
+    "belly": [
+     1.91,
+     0,
+     1.95
+    ],
+    "land": [
+     8.05,
+     3.88,
+     3.97
+    ]
+   },
    "source": "generated"
   },
   "b77l": {
    "file": "types/b77l.glb",
-   "rev": "b51112be94",
+   "rev": "fdf1d80dc6",
    "name": "Boeing 777-200LR / 777F",
    "cls": "widebody",
    "length": 63.73,
@@ -359,11 +1142,38 @@
    "height": 18.28,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -15.82,
+     32.45,
+     7.07
+    ],
+    "tail": [
+     -31.96,
+     0,
+     7.01
+    ],
+    "top": [
+     4.19,
+     0,
+     8.65
+    ],
+    "belly": [
+     0.41,
+     0,
+     1.95
+    ],
+    "land": [
+     6.45,
+     3.88,
+     3.97
+    ]
+   },
    "source": "generated"
   },
   "b77w": {
    "file": "types/b77w.glb",
-   "rev": "33c5451b91",
+   "rev": "0fe562b721",
    "name": "Boeing 777-300ER",
    "cls": "widebody",
    "length": 73.86,
@@ -371,11 +1181,38 @@
    "height": 18.28,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -14.55,
+     32.45,
+     7.07
+    ],
+    "tail": [
+     -37.03,
+     0,
+     7.01
+    ],
+    "top": [
+     5.45,
+     0,
+     8.65
+    ],
+    "belly": [
+     1.67,
+     0,
+     1.95
+    ],
+    "land": [
+     7.72,
+     3.88,
+     3.97
+    ]
+   },
    "source": "generated"
   },
   "b788": {
    "file": "types/b788.glb",
-   "rev": "de5cbe313e",
+   "rev": "1f71d0fce4",
    "name": "Boeing 787-8",
    "cls": "widebody",
    "length": 56.72,
@@ -383,11 +1220,38 @@
    "height": 16.45,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -16.63,
+     30.11,
+     7.1
+    ],
+    "tail": [
+     -28.46,
+     0,
+     6.61
+    ],
+    "top": [
+     2.94,
+     0,
+     8.19
+    ],
+    "belly": [
+     -0.36,
+     0,
+     1.75
+    ],
+    "land": [
+     4.92,
+     3.61,
+     3.75
+    ]
+   },
    "source": "generated"
   },
   "b789": {
    "file": "types/b789.glb",
-   "rev": "aad4cc225e",
+   "rev": "51195556e1",
    "name": "Boeing 787-9",
    "cls": "widebody",
    "length": 62.81,
@@ -395,11 +1259,38 @@
    "height": 16.45,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -15.64,
+     30.11,
+     7.1
+    ],
+    "tail": [
+     -31.51,
+     0,
+     6.61
+    ],
+    "top": [
+     3.92,
+     0,
+     8.19
+    ],
+    "belly": [
+     0.62,
+     0,
+     1.75
+    ],
+    "land": [
+     5.9,
+     3.61,
+     3.75
+    ]
+   },
    "source": "generated"
   },
   "b78x": {
    "file": "types/b78x.glb",
-   "rev": "66635ac321",
+   "rev": "fcec65dbf9",
    "name": "Boeing 787-10",
    "cls": "widebody",
    "length": 68.28,
@@ -407,11 +1298,38 @@
    "height": 16.45,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -14.67,
+     30.11,
+     7.1
+    ],
+    "tail": [
+     -34.24,
+     0,
+     6.61
+    ],
+    "top": [
+     4.89,
+     0,
+     8.19
+    ],
+    "belly": [
+     1.59,
+     0,
+     1.75
+    ],
+    "land": [
+     6.87,
+     3.61,
+     3.75
+    ]
+   },
    "source": "generated"
   },
   "bcs1": {
    "file": "types/bcs1.glb",
-   "rev": "ffc36c4f26",
+   "rev": "d64ced4c8c",
    "name": "Airbus A220-100",
    "cls": "narrowbody",
    "length": 35,
@@ -419,11 +1337,38 @@
    "height": 10.75,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -4.77,
+     17.6,
+     3.77
+    ],
+    "tail": [
+     -17.6,
+     0,
+     4.25
+    ],
+    "top": [
+     2.66,
+     0,
+     5.36
+    ],
+    "belly": [
+     0.77,
+     0,
+     1.05
+    ],
+    "land": [
+     3.79,
+     2.31,
+     2.34
+    ]
+   },
    "source": "generated"
   },
   "bcs3": {
    "file": "types/bcs3.glb",
-   "rev": "fc85848c7b",
+   "rev": "648a54657d",
    "name": "Airbus A220-300",
    "cls": "narrowbody",
    "length": 38.7,
@@ -431,11 +1376,38 @@
    "height": 10.75,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -4.67,
+     17.6,
+     3.77
+    ],
+    "tail": [
+     -19.45,
+     0,
+     4.25
+    ],
+    "top": [
+     2.75,
+     0,
+     5.36
+    ],
+    "belly": [
+     0.86,
+     0,
+     1.05
+    ],
+    "land": [
+     3.89,
+     2.31,
+     2.34
+    ]
+   },
    "source": "generated"
   },
   "be20": {
    "file": "types/be20.glb",
-   "rev": "dfb13afbd6",
+   "rev": "41456eb771",
    "name": "Beechcraft King Air",
    "cls": "turboprop",
    "length": 13.34,
@@ -443,11 +1415,38 @@
    "height": 4.93,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     1.53,
+     8.36,
+     2.07
+    ],
+    "tail": [
+     -6.77,
+     0,
+     1.99
+    ],
+    "top": [
+     1.58,
+     0,
+     2.6
+    ],
+    "belly": [
+     0.89,
+     0,
+     0.5
+    ],
+    "land": [
+     1.99,
+     0.93,
+     1.2
+    ]
+   },
    "source": "generated"
   },
   "bizh": {
    "file": "types/bizh.glb",
-   "rev": "ff98cb2bf1",
+   "rev": "b970e4dd72",
    "name": "Large business jet",
    "cls": "bizjet",
    "length": 30.41,
@@ -455,11 +1454,38 @@
    "height": 8.05,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -7.91,
+     15.23,
+     2.71
+    ],
+    "tail": [
+     -15.3,
+     0,
+     3.07
+    ],
+    "top": [
+     0.81,
+     0,
+     3.93
+    ],
+    "belly": [
+     -0.81,
+     0,
+     0.7
+    ],
+    "land": [
+     1.78,
+     1.63,
+     1.66
+    ]
+   },
    "source": "generated"
   },
   "bizl": {
    "file": "types/bizl.glb",
-   "rev": "59a9e45143",
+   "rev": "7804952add",
    "name": "Light business jet",
    "cls": "bizjet",
    "length": 15.6,
@@ -467,11 +1493,38 @@
    "height": 4.86,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -1.64,
+     8,
+     1.63
+    ],
+    "tail": [
+     -7.9,
+     0,
+     1.93
+    ],
+    "top": [
+     0.41,
+     0,
+     2.57
+    ],
+    "belly": [
+     -0.43,
+     0,
+     0.35
+    ],
+    "land": [
+     0.91,
+     1.02,
+     1.05
+    ]
+   },
    "source": "generated"
   },
   "bizm": {
    "file": "types/bizm.glb",
-   "rev": "bc5fd46392",
+   "rev": "b8e834d126",
    "name": "Mid-size business jet",
    "cls": "bizjet",
    "length": 20.92,
@@ -479,11 +1532,38 @@
    "height": 6.28,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -4.04,
+     10.55,
+     2.09
+    ],
+    "tail": [
+     -10.56,
+     0,
+     2.54
+    ],
+    "top": [
+     0.59,
+     0,
+     3.31
+    ],
+    "belly": [
+     -0.49,
+     0,
+     0.5
+    ],
+    "land": [
+     1.24,
+     1.38,
+     1.35
+    ]
+   },
    "source": "generated"
   },
   "c172": {
    "file": "types/c172.glb",
-   "rev": "efacc29a8d",
+   "rev": "093a508cf0",
    "name": "High-wing single",
    "cls": "light",
    "length": 8.3,
@@ -491,11 +1571,38 @@
    "height": 2.7,
    "livery": true,
    "gear": false,
+   "lights": {
+    "tip": [
+     0.9,
+     5.5,
+     2.0700000000000003
+    ],
+    "tail": [
+     -4.3,
+     0,
+     1.65
+    ],
+    "top": [
+     -3.6,
+     0,
+     2.85
+    ],
+    "belly": [
+     0.5,
+     0,
+     0.6
+    ],
+    "land": [
+     1,
+     3.0250000000000004,
+     1.87
+    ]
+   },
    "source": "generated"
   },
   "crj2": {
    "file": "types/crj2.glb",
-   "rev": "0a369b5aa6",
+   "rev": "a6ec3e978c",
    "name": "Bombardier CRJ200",
    "cls": "regional",
    "length": 26.77,
@@ -503,11 +1610,38 @@
    "height": 7.55,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -4.63,
+     10.66,
+     2.48
+    ],
+    "tail": [
+     -13.48,
+     0,
+     3.04
+    ],
+    "top": [
+     0.05,
+     0,
+     3.9
+    ],
+    "belly": [
+     -1.24,
+     0,
+     0.7
+    ],
+    "land": [
+     0.82,
+     1.69,
+     1.68
+    ]
+   },
    "source": "generated"
   },
   "crj7": {
    "file": "types/crj7.glb",
-   "rev": "d0b2ffc64c",
+   "rev": "5a894fe68f",
    "name": "Bombardier CRJ700",
    "cls": "regional",
    "length": 32.51,
@@ -515,11 +1649,38 @@
    "height": 8.07,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -4.88,
+     11.67,
+     2.56
+    ],
+    "tail": [
+     -16.35,
+     0,
+     3.04
+    ],
+    "top": [
+     0.19,
+     0,
+     3.9
+    ],
+    "belly": [
+     -1.25,
+     0,
+     0.7
+    ],
+    "land": [
+     1.05,
+     1.69,
+     1.68
+    ]
+   },
    "source": "generated"
   },
   "crj9": {
    "file": "types/crj9.glb",
-   "rev": "b953cbc986",
+   "rev": "85a9e8a0ea",
    "name": "Bombardier CRJ900/1000",
    "cls": "regional",
    "length": 36.4,
@@ -527,11 +1688,38 @@
    "height": 8.07,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -5.12,
+     12.48,
+     2.62
+    ],
+    "tail": [
+     -18.3,
+     0,
+     3.04
+    ],
+    "top": [
+     0.38,
+     0,
+     3.9
+    ],
+    "belly": [
+     -1.06,
+     0,
+     0.7
+    ],
+    "land": [
+     1.24,
+     1.69,
+     1.68
+    ]
+   },
    "source": "generated"
   },
   "dh8d": {
    "file": "types/dh8d.glb",
-   "rev": "219a113ea4",
+   "rev": "e1dd02b53a",
    "name": "De Havilland Dash 8-400",
    "cls": "turboprop",
    "length": 32.83,
@@ -539,11 +1727,38 @@
    "height": 8.29,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     2.48,
+     14.26,
+     4.45
+    ],
+    "tail": [
+     -16.51,
+     0,
+     3.28
+    ],
+    "top": [
+     2.71,
+     0,
+     4.2
+    ],
+    "belly": [
+     1.81,
+     0,
+     1
+    ],
+    "land": [
+     3.25,
+     1.69,
+     3.81
+    ]
+   },
    "source": "generated"
   },
   "e145": {
    "file": "types/e145.glb",
-   "rev": "cc4cfc7575",
+   "rev": "ed9453bf90",
    "name": "Embraer ERJ-145",
    "cls": "regional",
    "length": 29.87,
@@ -551,11 +1766,38 @@
    "height": 6.82,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -3.18,
+     10.07,
+     2.24
+    ],
+    "tail": [
+     -15.03,
+     0,
+     2.62
+    ],
+    "top": [
+     -0.01,
+     0,
+     3.38
+    ],
+    "belly": [
+     -1.21,
+     0,
+     0.6
+    ],
+    "land": [
+     0.71,
+     1.42,
+     1.46
+    ]
+   },
    "source": "generated"
   },
   "e170": {
    "file": "types/e170.glb",
-   "rev": "91f097a34d",
+   "rev": "ffe939b874",
    "name": "Embraer E175",
    "cls": "regional",
    "length": 31.68,
@@ -563,11 +1805,38 @@
    "height": 10.2,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -3.32,
+     12.55,
+     3.08
+    ],
+    "tail": [
+     -15.94,
+     0,
+     3.74
+    ],
+    "top": [
+     1.49,
+     0,
+     4.74
+    ],
+    "belly": [
+     -0.19,
+     0,
+     0.9
+    ],
+    "land": [
+     2.5,
+     1.88,
+     2.05
+    ]
+   },
    "source": "generated"
   },
   "e190": {
    "file": "types/e190.glb",
-   "rev": "b38ba9e2e7",
+   "rev": "beeb7ac043",
    "name": "Embraer E190",
    "cls": "regional",
    "length": 36.24,
@@ -575,11 +1844,38 @@
    "height": 10.2,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -2.99,
+     13.55,
+     3.17
+    ],
+    "tail": [
+     -18.22,
+     0,
+     3.74
+    ],
+    "top": [
+     2.31,
+     0,
+     4.74
+    ],
+    "belly": [
+     0.63,
+     0,
+     0.9
+    ],
+    "land": [
+     3.31,
+     1.88,
+     2.05
+    ]
+   },
    "source": "generated"
   },
   "e195": {
    "file": "types/e195.glb",
-   "rev": "c7a1a689a7",
+   "rev": "0f5d6683eb",
    "name": "Embraer E195",
    "cls": "regional",
    "length": 38.65,
@@ -587,11 +1883,38 @@
    "height": 10.2,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -2.72,
+     13.55,
+     3.17
+    ],
+    "tail": [
+     -19.42,
+     0,
+     3.74
+    ],
+    "top": [
+     2.57,
+     0,
+     4.74
+    ],
+    "belly": [
+     0.89,
+     0,
+     0.9
+    ],
+    "land": [
+     3.58,
+     1.88,
+     2.05
+    ]
+   },
    "source": "generated"
   },
   "heli": {
    "file": "types/heli.glb",
-   "rev": "f2c1844f1a",
+   "rev": "44901ce276",
    "name": "Helicopter",
    "cls": "helicopter",
    "length": 13.6,
@@ -599,11 +1922,38 @@
    "height": 4,
    "livery": true,
    "gear": false,
+   "lights": {
+    "tip": [
+     -6.3,
+     0.95,
+     2.3
+    ],
+    "tail": [
+     -8.4,
+     0,
+     2.45
+    ],
+    "top": [
+     -1.2,
+     0,
+     2.75
+    ],
+    "belly": [
+     0.5,
+     0,
+     0.5
+    ],
+    "land": [
+     2.6,
+     0.3,
+     0.85
+    ]
+   },
    "source": "generated"
   },
   "md80": {
    "file": "types/md80.glb",
-   "rev": "dca62bf8d8",
+   "rev": "fae1e83db0",
    "name": "McDonnell Douglas MD-80",
    "cls": "narrowbody",
    "length": 45.06,
@@ -611,11 +1961,38 @@
    "height": 9.82,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     -5.34,
+     16.49,
+     2.75
+    ],
+    "tail": [
+     -22.63,
+     0,
+     3.8
+    ],
+    "top": [
+     1.17,
+     0,
+     4.86
+    ],
+    "belly": [
+     -0.81,
+     0,
+     0.75
+    ],
+    "land": [
+     2.36,
+     2.09,
+     1.9
+    ]
+   },
    "source": "generated"
   },
   "pa28": {
    "file": "types/pa28.glb",
-   "rev": "13482f83a4",
+   "rev": "2a8ba406d4",
    "name": "Low-wing single",
    "cls": "light",
    "length": 8.3,
@@ -623,11 +2000,38 @@
    "height": 2.7,
    "livery": true,
    "gear": false,
+   "lights": {
+    "tip": [
+     0.9,
+     5.35,
+     0.73
+    ],
+    "tail": [
+     -4.3,
+     0,
+     1.4500000000000002
+    ],
+    "top": [
+     -3.6,
+     0,
+     2.6500000000000004
+    ],
+    "belly": [
+     0.5,
+     0,
+     0.4
+    ],
+    "land": [
+     1,
+     2.9425,
+     0.53
+    ]
+   },
    "source": "generated"
   },
   "pc12": {
    "file": "types/pc12.glb",
-   "rev": "15a6f37768",
+   "rev": "22be22ee8d",
    "name": "Pilatus PC-12",
    "cls": "turboprop",
    "length": 14.4,
@@ -635,6 +2039,33 @@
    "height": 5.04,
    "livery": true,
    "gear": true,
+   "lights": {
+    "tip": [
+     1.37,
+     8.19,
+     1.78
+    ],
+    "tail": [
+     -7.3,
+     0,
+     2.02
+    ],
+    "top": [
+     1.3,
+     0,
+     2.64
+    ],
+    "belly": [
+     0.58,
+     0,
+     0.5
+    ],
+    "land": [
+     1.73,
+     0.98,
+     1.18
+    ]
+   },
    "source": "generated"
   }
  },

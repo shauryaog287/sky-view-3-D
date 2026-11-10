@@ -20,6 +20,8 @@ export interface ModelEntry {
   livery: boolean;
   /** Has a retractable "gear" node. */
   gear: boolean;
+  /** Light positions in the model frame, [forward, left, up] metres (left-side lights are mirrored). */
+  lights?: { tip: [number, number, number]; tail: [number, number, number]; top: [number, number, number]; belly: [number, number, number]; land: [number, number, number] };
   source: 'generated' | 'licensed';
   licence?: string;
   author?: string;

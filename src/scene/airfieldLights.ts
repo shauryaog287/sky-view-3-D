@@ -4,7 +4,7 @@ import { LIGHT, LIGHT_RGB, papiColour, type AirfieldLighting } from '../../share
 
 let sprite: HTMLCanvasElement | undefined;
 /** Soft glow: a bright core with a wide falloff, tinted per light. */
-function glow(): HTMLCanvasElement {
+export function glowSprite(): HTMLCanvasElement {
   if (sprite) return sprite;
   const c = document.createElement('canvas');
   c.width = c.height = 64;
@@ -58,7 +58,7 @@ export class AirfieldLightSet {
     this.toLocal = Matrix4.inverseTransformation(Transforms.eastNorthUpToFixedFrame(this.centre), new Matrix4());
     this.side = layout.runways.map(() => 0);
     this.byRunway = layout.runways.map(() => []);
-    const image = glow();
+    const image = glowSprite();
     layout.lights.forEach((l, i) => {
       const ll = toLatLon(origin, l.x, l.y);
       const px = SIZE_PX[l.size];

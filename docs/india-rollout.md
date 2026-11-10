@@ -8,9 +8,13 @@ with its real type **and** its operator's livery. Fleets change. Check each airl
 
 | Phase | Airports | 3D scenery | Runways / runway in use |
 | --- | --- | --- | --- |
-| 1 | 39 international airports (`shared/indiaAirports.ts` → `INDIA_INTERNATIONAL`): DEL BOM BLR HYD MAA CCU NMI COK AMD GOI GOX PNQ LKO JAI TRV CCJ GAU ATQ BBI NAG CJB IXE VNS SXR IDR IXB VTZ TRZ IXC CNN IXM IMF VGA TIR IXZ STV GAY RPR IXA | Static files in `public/airports3d/` (`npm run data:airport3d -- --india-intl`) | OurAirports runway data (checked: DEL's four runways incl. 11R/29L, BLR and HYD parallels, Navi Mumbai); runway in use learned live |
-| 2 | ~84 other Indian airports with an IATA code (`indiaDomestic()`) | Built on demand by `/api/airport3d/:icao` (cached 7 days); `--india-domestic` makes them static | Same |
-| 3 | International hubs (DXB, DOH, AUH, SIN, LHR, FRA, JFK… then by traffic) | On demand; curate the busiest | Same |
+| 1 | 39 Indian international airports (`shared/indiaAirports.ts` → `INDIA_INTERNATIONAL`) | Pre-built, shipped in `public/airports3d/` | OurAirports runway data, aligned sideways to the OpenStreetMap centreline for lighting; runway in use learned live |
+| 2 | 83 other Indian airports with an IATA code (`indiaDomestic()`) | Pre-built, shipped | Same |
+| 3 | 134 international hubs (`shared/worldHubs.ts`: Gulf, South and South-East Asia, East Asia, Europe, Americas, Africa, Oceania) | Pre-built, shipped | Same |
+| 4 | Every other airport | Built on demand by `/api/airport3d/:icao` (cached 7 days). Airfield lighting needs no scenery data, so every airport with runway data has it. | Same |
+
+Rebuild or extend with `npm run data:airport3d -- --all` (downloads once into `.cache/osm/`, then `--rebuild` works
+offline). 256 airports are shipped today (9 MB of JSON, each loaded only when the camera is near).
 
 Photoreal buildings and terrain at each airport depend on Google Photorealistic 3D Tiles coverage (NEEDS_FROM_ME §3).
 Coverage in India is uneven. Once the key is in, check each phase-1 airport and list the ones that are still flat;

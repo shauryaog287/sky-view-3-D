@@ -71,6 +71,7 @@ for (const def of MODELS) {
       height: round(built.height),
       livery: def.livery,
       gear: def.gear,
+      ...(built.lights ? { lights: built.lights } : {}),
       source: 'generated',
     };
     console.log(`${def.id.padEnd(5)} ${(glb.length / 1024).toFixed(0).padStart(4)} KiB ${String(built.b.triangles()).padStart(6)} tris  ${((performance.now() - t0) / 1000).toFixed(1)} s  ${def.name}`);

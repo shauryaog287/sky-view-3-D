@@ -192,9 +192,28 @@ function airfoil(le: V3, chord: number, t: number, thick: V3, lowerScale = 0.75)
   });
 }
 
+export interface ModelLights {
+  /** Left wingtip (mirrored for the right): strobes and navigation lights. */
+  tip: [number, number, number];
+  tail: [number, number, number];
+  /** Red beacons on top of and under the fuselage. */
+  top: [number, number, number];
+  belly: [number, number, number];
+  /** Left landing light at the wing root (mirrored for the right). */
+  land: [number, number, number];
+}
+
+/**
+ * Paint zones in the `_LIVERY` vertex attribute, read by the app's livery shader: fin and winglets take the tail
+ * colour, nacelles the engine colour, and the fuselage gets belly / cheatline / rear-sweep colours by position.
+ */
+export const ZONE = { TAIL: 1, ENGINE: 0.5, FUSELAGE: 0.25 } as const;
+
 export interface Built {
   b: Builder;
   textures: Record<string, Texture>;
+  /** Where the aircraft's lights are, in the app's model frame: [forward, left, up] metres from the origin. */
+  lights?: ModelLights;
   /** Overall dimensions for the manifest. */
   length: number;
   span: number;
@@ -256,7 +275,7 @@ export function buildAirliner(s: AirlinerSpec, texW = 2048, texH = 512): Built {
     return p.yc - p.r;
   };
   const hwAt = (z: number) => profileAt(stations, z).hw;
-  b.lathe('fuselage', stations, segs, [0, 0, 0], { uZ0: z0, uZ1: z1 });
+  b.lathe('fuselage', stations, segs, [0, 0, 0], { uZ0: z0, uZ1: z1, livery: ZONE.FUSELAGE });
 
   // ── Texture ──
   const winY = yc + s.windows.y * Rv;
@@ -435,7 +454,15 @@ export function buildAirliner(s: AirlinerSpec, texW = 2048, texH = 512): Built {
   b.sphere('navRed', [0, yc - Rv - lightR * 0.6, zLEroot - w.root * 0.6], lightR);
 
   const height = Math.max(finTop + f.tip * 0.1, sb.t ? sy + 0.3 : 0);
-  return { b, textures, length: L, span: w.span, height };
+  const r2 = (v: number) => Math.round(v * 100) / 100;
+  const lights: ModelLights = {
+    tip: [r2(tip.z - tip.c * 0.3), r2(tip.x + 0.05), r2(tip.y + 0.1)],
+    tail: [r2(z0 - 0.1), 0, r2(stations[0][2] ?? yc)],
+    top: [r2(zLEroot - w.root * 0.3), 0, r2(yc + Rv + 0.25)],
+    belly: [r2(zLEroot - w.root * 0.6), 0, r2(yc - Rv - 0.25)],
+    land: [r2(zLEroot - w.root * 0.12), r2(R * 1.25), r2(wyAt(R * 1.25))],
+  };
+  return { b, textures, length: L, span: w.span, height, lights };
 }
 
 // ── Texture layers ──────────────────────────────────────────────────────────
@@ -529,7 +556,7 @@ function fan(b: Builder, cx: number, cy: number, zf: number, Rn: number, len: nu
   const seg = Rn > 1 ? 28 : 20;
   const at = (f: number) => zf - f * len;
   const o: V3 = [cx, cy, 0];
-  b.lathe('nacelle', [[at(0.62), Rn * 0.86], [at(0.45), Rn * 0.97], [at(0.25), Rn], [at(0.1), Rn * 0.985], [at(0.035), Rn * 0.955]], seg, o, { caps: false });
+  b.lathe('nacelle', [[at(0.62), Rn * 0.86], [at(0.45), Rn * 0.97], [at(0.25), Rn], [at(0.1), Rn * 0.985], [at(0.035), Rn * 0.955]], seg, o, { caps: false, livery: ZONE.ENGINE });
   b.lathe('lip', [[at(0.035), Rn * 0.955], [at(0.008), Rn * 0.925], [at(0), Rn * 0.885]], seg, o, { caps: false });
   b.lathe('inlet', [[at(0.15), Rn * 0.8], [at(0.05), Rn * 0.84], [at(0), Rn * 0.885]], seg, o, { inside: true });
   b.disc('fan', [cx, cy, at(0.15)], Rn * 0.81, 'z', seg);
@@ -553,7 +580,7 @@ function prop(b: Builder, cx: number, cy: number, zf: number, Rn: number, len: n
     [at(0.03), Rn * 0.78, 0, 0.8],
     [at(0), Rn * 0.64, 0, 0.84],
   ];
-  b.lathe('nacelle', st, 20, [cx, cy, 0]);
+  b.lathe('nacelle', st, 20, [cx, cy, 0], { livery: ZONE.ENGINE });
   b.box('exhaust', [cx + side * Rn * 0.62, cy + Rn * 0.2, at(0.38)], [0.12, Rn * 0.45, Rn * 0.7]);
   spinnerAndProp(b, cx, cy, zf, Rn * 0.62, propDia, blades);
 }

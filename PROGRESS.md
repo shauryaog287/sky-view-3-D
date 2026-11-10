@@ -13,13 +13,14 @@ Legend: ✅ done · 🔄 in progress · ⏳ not started · ⛔ blocked (see NEED
 | M7 Auth, feature flags, paywall (off), Razorpay test, analytics | ✅ | Paywall flow verified end-to-end in mock mode; JWT + Razorpay signatures/webhooks unit-tested |
 | M8 PWA polish, legal, deploy, README | ✅ | Installable + offline shell verified by e2e; legal pages; deploy scripts + manual workflow; README |
 | Real airports without a key | ✅ | Esri satellite layer + OSM 3D terminals/towers/jet bridges; tower cam in the real tower (D-028) |
+| Best 3D without keys | ✅ | Worldwide 3D terrain with flattened airports; architectural airport meshes with lit windows; full airfield lighting incl. PAPI; night Earth with city lights; airline paint schemes; aircraft strobes/beacons/landing lights; 256 airports pre-built (D-032) |
 | 3D airports, 2D city | ✅ | Google 3D tiles clipped to airport outlines, flat 2D satellite map elsewhere (default; "Everywhere" in Settings). Verified with a stand-in tileset (no Google key yet) (D-031) |
 | Runway assignment + India-first rollout | ✅ | Runway in use learned live (lined up → traffic → wind → geometry), shown in the info panel and used by runway/tower cams; Indian international airports' 3D scenery shipped; airline-specific replica slots (D-030, docs/india-rollout.md) |
 | Per-type aircraft models | ✅ | 53 generated models / 218 ICAO types, airline tail colours, gear retracts in flight; import script for licensed photoreal models (D-029) |
 
 ## Test status (last run)
 - `npm run typecheck` — clean (web, worker, scripts).
-- `npm test` — 28 files / 116 tests passing.
+- `npm test` — 32 files / 134 tests passing.
 - `npm run test:e2e` — 20 tests (10 flows × tablet + phone) passing against the mock-mode production build.
 
 ## Not yet verified (needs keys, accounts or a real device)

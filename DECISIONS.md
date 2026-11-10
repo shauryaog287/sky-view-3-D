@@ -335,3 +335,37 @@ Short architecture decision records. Newest decisions are appended at the bottom
 
 ## Project Lead
 - Developed and maintained by @shauryaog287
+
+## D-032 · "Best 3D without keys": terrain, architectural airports, lighting, night, paint schemes
+- **Terrain everywhere** (`src/scene/openTerrain.ts`): the open Tilezen Terrain Tiles on AWS (Terrarium PNG, ~30 m
+  over land) decoded into Cesium heightmaps. Heights are used as metres above sea level, which matches aircraft
+  altitudes and airport elevations directly. Every airport is flattened to its field elevation inside its runway
+  outline (+900 m) and blended back over 700 m (`shared/terrainFlatten.ts`): elevation data is noisy and airfields are
+  graded flat, while table-top drops and mountains around them stay real. Used with the satellite layer; Settings →
+  "3D terrain". Google mode keeps its own terrain (D-031).
+- **Airports as architecture** (`shared/airportMesh.ts`, `src/scene/airportAppearance.ts`): one mesh and one draw call
+  per airport, with a procedural shader instead of textures. Terminals get glazed curtain walls, other buildings a
+  window grid, hangars ribbed metal and arched or pitched roofs, plus canopies, car-park decks, towers with a glass
+  cab, jet bridges on drive columns with a rotunda, storage tanks and lighting masts. Patterns fade to their average
+  when smaller than a pixel. At night rooms light up. Scenery data v2 adds building parts, mapped colours, roof shapes
+  and materials (rare in India, common in Europe), tanks, masts, stands, runway centrelines and the boundary.
+- **Airfield lighting** (`shared/airportLights.ts`, `src/scene/airfieldLights.ts`): ICAO-style layout as glow
+  sprites. Runway edge lights (amber over the last 600 m), threshold green / runway end red, centreline (red towards
+  the end), touchdown zone, approach barrettes with a crossbar and sequenced flashers, PAPI computed from the viewer's
+  glide angle, taxiway centreline green and edge blue, apron floodlights, red obstruction lights and the tower beacon.
+  Colours depend on which side of the runway the viewer is on. On from dusk; PAPI also by day. Works for any airport
+  with runway data, including ones without scenery. Runway lights are shifted sideways onto the OpenStreetMap
+  centreline when there is one, so they sit on the runway seen in the imagery.
+- **Night**: globe day/night shading at every camera distance (Cesium only darkens the night side from orbit by
+  default), darker night imagery, NASA VIIRS city lights from altitude (faded out below 60 km).
+- **Airline paint schemes** (`shared/liveries.ts`, shader in `modelPool.ts`): the generated models mark paint zones
+  (fin and winglets, nacelles, fuselage). The shader places tail, tail accent, engine, body tint, belly, cheatline and
+  rear sweep colours from texture coordinates while windows and door seams stay. 42 airlines have a designed scheme;
+  others get their brand colour on the tail. Colours only, no logos or artwork (trademarks, NEEDS_FROM_ME §16).
+- **Aircraft lights** (`src/scene/aircraftLights.ts`): wingtip strobes, red beacons, navigation lights at night, and
+  landing lights that flare when the aircraft points at the viewer. Positions come from each model's manifest entry.
+- **Coverage**: 256 airports pre-built (all Indian airports with airline service plus 134 world hubs). The build
+  caches raw OSM data and can fall back from Overpass to the OSM API for small bounding-box extracts (rate-limited,
+  one-off; runtime still uses Overpass through the Worker).
+- Not done: animated propellers/gear, contrails, ground vehicles, real per-aircraft liveries (need licensed models),
+  3D city buildings (need Google tiles or an OSM-buildings service).

@@ -33,7 +33,7 @@ export function buildHelicopter(): Built {
     [2.95, 0.12, yc - 0.26, 1.0],
     [3.0, 0.001, yc - 0.28, 1.0],
   ];
-  b.lathe('fuselage', st, 28, [0, 0, 0], { uZ0: -2.2, uZ1: 3.0 });
+  b.lathe('fuselage', st, 28, [0, 0, 0], { uZ0: -2.2, uZ1: 3.0, livery: 0.25 });
   const layers: Layer[] = [
     // Large wrap-around windscreen and chin windows.
     (p) => (p.z > 1.35 && p.y > yc - 0.55 && p.y < yc + 0.75 && !(Math.abs(p.x) < 0.035 && p.y > yc - 0.1) ? C.glass : undefined),
@@ -90,7 +90,7 @@ export function buildHelicopter(): Built {
   b.sphere('navRed', [0.95, yc + 0.85, -6.3], 0.06);
   b.sphere('navGreen', [-0.95, yc + 0.85, -6.3], 0.06);
   b.sphere('navRed', [0, yc + 1.25, -1.2], 0.07);
-  return { b, textures: { fus: paintLathe(1024, 256, st, -2.2, 3.0, layers, C.white) }, length: 13.6, span: 11, height: 4 };
+  return { b, textures: { fus: paintLathe(1024, 256, st, -2.2, 3.0, layers, C.white) }, length: 13.6, span: 11, height: 4, lights: { tip: [-6.3, 0.95, yc + 0.85], tail: [-8.4, 0, yc + 1.0], top: [-1.2, 0, yc + 1.3], belly: [0.5, 0, yc - 0.95], land: [2.6, 0.3, yc - 0.6] } };
 }
 
 export function buildLight(highWing: boolean): Built {
@@ -107,7 +107,7 @@ export function buildLight(highWing: boolean): Built {
     [3.55, 0.32, yc - 0.06, 0.95],
     [3.75, 0.2, yc - 0.06, 1],
   ];
-  b.lathe('fuselage', st, 22, [0, 0, 0], { uZ0: -4.3, uZ1: 3.75 });
+  b.lathe('fuselage', st, 22, [0, 0, 0], { uZ0: -4.3, uZ1: 3.75, livery: 0.25 });
   const poly: [number, number][] = [
     [1.85, yc + 0.18],
     [0.95, yc + 0.58],
@@ -149,5 +149,5 @@ export function buildLight(highWing: boolean): Built {
   b.sphere('navRed', [span + 0.03, wing[2][0][1], 0.9], 0.04);
   b.sphere('navGreen', [-span - 0.03, wing[2][0][1], 0.9], 0.04);
   b.sphere('navRed', [0, yc + 1.58, -3.9], 0.04);
-  return { b, textures: { fus: paintLathe(1024, 256, st, -4.3, 3.75, layers, C.white) }, length: 8.3, span: span * 2, height: 2.7 };
+  return { b, textures: { fus: paintLathe(1024, 256, st, -4.3, 3.75, layers, C.white) }, length: 8.3, span: span * 2, height: 2.7, lights: { tip: [0.9, span, wy + 0.2], tail: [-4.3, 0, yc + 0.4], top: [-3.6, 0, yc + 1.6], belly: [0.5, 0, yc - 0.65], land: [1.0, span * 0.55, wy] } };
 }

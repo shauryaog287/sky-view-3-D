@@ -18,6 +18,8 @@ import { installDataCredits, trackCreditBarHeight } from './credits';
 import { QUALITY, type QualityLevel } from '../config/quality';
 import { photoreal, photorealScope, quality, showLabels, terrain3d, weatherOn } from '../state/settings';
 import { OpenTerrain } from './openTerrain';
+import { sceneNowMs } from './sceneTime';
+import { solarElevationDeg } from '../../shared/sun';
 import { PhotorealScope } from './photorealScope';
 import { env } from '../config/env';
 import { api } from '../api';
@@ -138,6 +140,13 @@ export class SceneController {
       dt = this.lastFrame ? Math.min(0.25, (now - this.lastFrame) / 1000) : 0.016;
       this.lastFrame = now;
       if (this.aircraft.models) this.aircraft.models.silhouettes = cameraMode.value === 'free' || cameraMode.value === 'orbit' || cameraMode.value === 'chase';
+      if (this.aircraft.models && now - this.lastNight > 2000) {
+        // Navigation lights come on at dusk where the camera is.
+        this.lastNight = now;
+        const c = this.viewer.camera.positionCartographic;
+        const elev = solarElevationDeg((c.latitude * 180) / Math.PI, (c.longitude * 180) / Math.PI, sceneNowMs());
+        this.aircraft.models.night = Math.min(1, Math.max(0, (4 - elev) / 8));
+      }
       this.aircraft.update(now);
       this.airport3d.update();
       const focus = this.focusPoint();
@@ -240,6 +249,7 @@ export class SceneController {
     this.sky.configure({ maxClouds: q.clouds, fog: q.fog, effects: weatherOn.value && canUseFeature('weather_effects') });
   }
 
+  private lastNight = 0;
   private readonly openTerrain = new OpenTerrain(() => this.phases.airportIndex);
   private terrainOn = false;
 

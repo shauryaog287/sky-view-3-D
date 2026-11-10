@@ -1,5 +1,7 @@
-import { Cartesian3, Color, CustomShader, Model, ShadowMode, UniformType, type Scene } from 'cesium';
+import { Cartesian3, Cartesian4, Color, CustomShader, Model, ShadowMode, UniformType, type Scene } from 'cesium';
 import { airlineFromCallsign } from '../../shared/airlines';
+import { paintSchemeFor } from '../../shared/liveries';
+import { AircraftLights, type LitAircraft } from './aircraftLights';
 import { modelEntry, modelUrl } from '../../shared/aircraftModels';
 import type { FrameAircraft } from './aircraftLayer';
 import { aircraftModelMatrix } from './orientation';
@@ -15,30 +17,51 @@ interface Slot {
 }
 
 const SELECT_COLOR = Color.fromCssColorString('#39d0ff');
-const WHITE = new Cartesian3(1, 1, 1);
+const OFF = new Cartesian4(1, 1, 1, 0);
 
 /**
- * Tail/winglet paint: generated models mark those surfaces with the `_LIVERY` vertex attribute (0…1) and this shader
- * mixes in the operator's brand colour. One shader instance per pooled model; Cesium shares the compiled program.
+ * Airline paint for the generated models (shared/liveries.ts). The models mark paint zones in the `_LIVERY` vertex
+ * attribute (1 = fin and winglets, 0.5 = nacelles, 0.25 = fuselage); on the fuselage the texture coordinates give the
+ * position along (u: tail → nose) and around (v) the body, so belly, cheatline and rear sweep are placed in the
+ * shader while windows and door seams from the texture stay visible. Colours only — no logos.
+ * One shader instance per pooled model; Cesium shares the compiled program.
  */
 function liveryShader(): CustomShader {
+  const v4 = () => ({ type: UniformType.VEC4, value: Cartesian4.clone(OFF) });
   return new CustomShader({
-    uniforms: {
-      u_livery: { type: UniformType.VEC3, value: Cartesian3.clone(WHITE) },
-      u_liveryOn: { type: UniformType.FLOAT, value: 0 },
-    },
+    uniforms: { u_tail: v4(), u_tail2: v4(), u_body: v4(), u_belly: v4(), u_cheat: v4(), u_sweep: v4(), u_engine: v4() },
     fragmentShaderText: `
       void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
-        float k = clamp(fsInput.attributes.livery * u_liveryOn, 0.0, 1.0);
-        material.diffuse = mix(material.diffuse, u_livery, k);
+        float zone = fsInput.attributes.livery;
+        vec2 uv = fsInput.attributes.texCoord_0;
+        vec3 d = material.diffuse;
+        if (zone > 0.75) {
+          vec3 c = mix(u_tail.rgb, u_tail2.rgb, u_tail2.a * step(0.62, uv.y));
+          d = mix(d, c, u_tail.a);
+        } else if (zone > 0.38) {
+          d = mix(d, u_engine.rgb, u_engine.a);
+        } else if (zone > 0.15) {
+          // Height on the fuselage side: +1 crown, 0 widest point, -1 keel.
+          float h = sin(uv.y * 6.2831853);
+          // Painted skin is bright in the texture; windows, windscreen and seams are dark and keep their colour.
+          float lum = clamp(dot(d, vec3(0.3333)) / 0.88, 0.0, 1.0);
+          float skin = smoothstep(0.3, 0.62, lum);
+          d = mix(d, d * u_body.rgb, u_body.a);
+          d = mix(d, u_belly.rgb * lum, u_belly.a * skin * (1.0 - smoothstep(-0.5, -0.42, h)));
+          d = mix(d, u_cheat.rgb, u_cheat.a * skin * step(-0.2, h) * step(h, -0.1) * step(0.13, uv.x) * step(uv.x, 0.9));
+          float edge = u_sweep.a * (0.55 + 0.45 * h);
+          d = mix(d, u_sweep.rgb * lum, skin * step(uv.x, edge) * step(0.001, u_sweep.a));
+        }
+        material.diffuse = d;
       }`,
   });
 }
 
-/** CSS sRGB colour → linear RGB (Cesium lights model materials in linear space). */
-function linear(css: string): Cartesian3 {
+/** CSS sRGB colour → linear RGB (Cesium lights model materials in linear space) with a strength in w. */
+function paint4(css: string | undefined, w = 1): Cartesian4 {
+  if (!css) return OFF;
   const c = Color.fromCssColorString(css);
-  return new Cartesian3(c.red ** 2.2, c.green ** 2.2, c.blue ** 2.2);
+  return new Cartesian4(c.red ** 2.2, c.green ** 2.2, c.blue ** 2.2, w);
 }
 
 /**
@@ -64,7 +87,13 @@ export class ModelPool {
   private creating = 0;
   private readonly pending = new Map<string, number>();
 
-  constructor(private readonly scene: Scene) {}
+  /** 0 by day … 1 at night (set by the scene): navigation lights only show in the dark. */
+  night = 0;
+  private readonly lights: AircraftLights;
+
+  constructor(private readonly scene: Scene) {
+    this.lights = new AircraftLights(scene);
+  }
 
   private lastPick = 0;
   private picked = new Set<string>();
@@ -91,14 +120,15 @@ export class ModelPool {
       if (!f || f.a.modelId !== slot.id) this.park(hex, slot);
     }
     const shown = new Set<string>();
+    const lit: LitAircraft[] = [];
     for (const [hex, f] of want) {
       let slot = this.active.get(hex);
       if (!slot) {
         slot = this.acquire(f.a.modelId);
         if (!slot) continue;
         this.active.set(hex, slot);
-        this.paint(slot, f);
       }
+      this.paint(slot, f);
       const sel = hex === selected || hex === followed;
       slot.model.silhouetteSize = sel && this.silhouettes ? 2 : 0;
       slot.model.silhouetteColor = SELECT_COLOR;
@@ -107,18 +137,27 @@ export class ModelPool {
       if (slot.ready) this.setGear(slot, this.gearDown(f));
       slot.model.show = slot.ready && !this.hidden.has(hex);
       if (slot.ready) shown.add(hex);
+      if (slot.model.show) lit.push({ matrix: slot.model.modelMatrix, entry: modelEntry(slot.id), landing: this.gearDown(f) || (f.pose.altFt !== null && f.pose.altFt < 10_000), seed: parseInt(hex.slice(-3), 16) / 4096 || 0 });
     }
+    this.lights.update(lit, t / 1000, this.night, this.scene.camera.positionWC);
     return shown;
   }
 
-  /** Operator colour on the tail of generated models. Imported models keep their own textures untouched. */
+  /** Airline paint scheme on generated models. Imported models keep their own textures untouched. */
   private paint(slot: Slot, f: FrameAircraft) {
     if (!slot.shader) return;
-    const color = airlineFromCallsign(f.a.state.callsign)?.color;
-    if (slot.livery === color) return;
-    slot.livery = color;
-    slot.shader.setUniform('u_livery', color ? linear(color) : WHITE);
-    slot.shader.setUniform('u_liveryOn', color ? 1 : 0);
+    const icao = airlineFromCallsign(f.a.state.callsign)?.icao;
+    if (slot.livery === (icao ?? '')) return;
+    slot.livery = icao ?? '';
+    const s = paintSchemeFor(icao);
+    const sh = slot.shader;
+    sh.setUniform('u_tail', paint4(s?.tail));
+    sh.setUniform('u_tail2', paint4(s?.tail2));
+    sh.setUniform('u_body', paint4(s?.body));
+    sh.setUniform('u_belly', paint4(s?.belly));
+    sh.setUniform('u_cheat', paint4(s?.cheat));
+    sh.setUniform('u_sweep', paint4(s?.sweep?.[0], s?.sweep?.[1] ?? 0));
+    sh.setUniform('u_engine', paint4(s?.engine));
   }
 
   private setGear(slot: Slot, down: boolean) {
