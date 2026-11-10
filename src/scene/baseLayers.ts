@@ -12,6 +12,8 @@ import {
   LightingModel,
   Cartesian3,
   ArcGisMapServerImageryProvider,
+  UrlTemplateImageryProvider,
+  Color,
   Credit,
   Resource,
 } from 'cesium';
@@ -20,6 +22,11 @@ export type BaseLayerKind = 'google3d' | 'ion' | 'satellite' | 'offline';
 
 /** Esri World Imagery (sub-metre satellite/aerial imagery at major airports). Keyless for non-commercial use. */
 export const ESRI_WORLD_IMAGERY = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer';
+
+/** NASA "Earth at night" city lights (VIIRS 2012, public domain), served by NASA GIBS without a key. */
+export const NIGHT_LIGHTS = 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg';
+/** How much of the daytime imagery remains visible on the night side (the rest fades to the dark globe). */
+const NIGHT_IMAGERY = 0.55;
 
 export interface BaseLayerStatus {
   kind: BaseLayerKind;
@@ -207,6 +214,8 @@ export class BaseLayers {
       .then((provider) => {
         if (this.satelliteLayer) return;
         this.satelliteLayer = this.viewer.imageryLayers.addImageryProvider(provider);
+        this.satelliteLayer.nightAlpha = NIGHT_IMAGERY;
+        this.raiseNightLights();
         this.satelliteCredit = new Credit('Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community', true);
         this.viewer.creditDisplay.addStaticCredit(this.satelliteCredit);
       })
@@ -215,6 +224,11 @@ export class BaseLayers {
   }
 
   private loadingFlat = false;
+  private nightLayer?: ImageryLayer;
+
+  private raiseNightLights() {
+    if (this.nightLayer) this.viewer.imageryLayers.raiseToTop(this.nightLayer);
+  }
 
   /**
    * Real satellite/aerial imagery on the ellipsoid: airports show their actual runways, taxiways, aprons and terminal
@@ -227,6 +241,8 @@ export class BaseLayers {
         const url = new Resource({ url: ESRI_WORLD_IMAGERY, queryParameters: arcgisKey ? { token: arcgisKey } : undefined });
         const provider = await ArcGisMapServerImageryProvider.fromUrl(url, { enablePickFeatures: false });
         this.satelliteLayer = this.viewer.imageryLayers.addImageryProvider(provider);
+        this.satelliteLayer.nightAlpha = NIGHT_IMAGERY;
+        this.raiseNightLights();
         this.satelliteCredit = new Credit('Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community', true);
         this.viewer.creditDisplay.addStaticCredit(this.satelliteCredit);
       }
@@ -246,7 +262,9 @@ export class BaseLayers {
       const { scene, imageryLayers } = this.viewer;
       if (!this.ionLayer) {
         this.ionLayer = ImageryLayer.fromWorldImagery({});
+        this.ionLayer.nightAlpha = NIGHT_IMAGERY;
         imageryLayers.add(this.ionLayer);
+        this.raiseNightLights();
       }
       const terrain = Terrain.fromWorldTerrain({ requestWaterMask: false, requestVertexNormals: true });
       scene.setTerrain(terrain);
@@ -276,7 +294,31 @@ export class BaseLayers {
         TileMapServiceImageryProvider.fromUrl(buildModuleUrl('Assets/Textures/NaturalEarthII')),
         {},
       );
+      this.offlineLayer.nightAlpha = NIGHT_IMAGERY;
       imageryLayers.add(this.offlineLayer, 0);
+    }
+    if (!this.nightLayer) {
+      // City lights on the night side only; black is keyed out so the dark terrain stays visible between cities.
+      this.nightLayer = new ImageryLayer(
+        new UrlTemplateImageryProvider({
+          url: NIGHT_LIGHTS,
+          maximumLevel: 8,
+          credit: new Credit('Night lights: NASA Earth Observatory / GIBS', true),
+        }),
+        // Only the bright cores survive the key (the source has a navy land tint); the globe's night shading then
+        // dims everything to 30 %, hence the brightness. Close to the ground the layer steps aside for the real
+        // airfield lights and dark imagery.
+        { dayAlpha: 0, nightAlpha: 0.9, brightness: 2.3, saturation: 0.8, colorToAlpha: Color.BLACK, colorToAlphaThreshold: 0.45 },
+      );
+      imageryLayers.add(this.nightLayer);
+      // City lights are an orbital-scale picture (≈600 m per pixel): fade them out on the way down.
+      const layer = this.nightLayer;
+      this.viewer.scene.preRender.addEventListener(() => {
+        const h = this.viewer.camera.positionCartographic.height;
+        const a = Math.min(1, Math.max(0, (h - 15_000) / 45_000)) * 0.9;
+        if (Math.abs(a - layer.nightAlpha) > 0.01) layer.nightAlpha = a;
+        layer.show = a > 0.01;
+      });
     }
     scene.terrainProvider = new EllipsoidTerrainProvider();
     scene.globe.show = true;

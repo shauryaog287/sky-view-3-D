@@ -1,4 +1,4 @@
-import { Cartographic, sampleTerrainMostDetailed, type Viewer, type Cesium3DTileset } from 'cesium';
+import { Cartographic, sampleTerrain, sampleTerrainMostDetailed, type Viewer, type Cesium3DTileset } from 'cesium';
 import type { Airport } from '../../shared/airports';
 import { FT_TO_M } from '../../shared/geo';
 import type { BaseLayerKind } from './baseLayers';
@@ -23,6 +23,11 @@ interface Entry {
 export class GroundHeights {
   private readonly cache = new Map<string, Entry>();
   private layer: BaseLayerKind = 'offline';
+  /**
+   * Open elevation terrain is active (see openTerrain.ts): heights are metres above sea level and every airport is
+   * flattened to its published elevation, so the airfield surface is known exactly without sampling.
+   */
+  private flatAirports = false;
   /** Altimeter correction per airport (ft), from METAR QNH. */
   private readonly qnhFt = new Map<string, number>();
 
@@ -39,6 +44,16 @@ export class GroundHeights {
     }
   }
 
+  setFlatAirports(on: boolean) {
+    if (on === this.flatAirports) return;
+    this.flatAirports = on;
+    this.cache.clear();
+  }
+
+  get terrainIsSeaLevel(): boolean {
+    return this.flatAirports;
+  }
+
   setQnh(icao: string, hpa: number | undefined) {
     if (hpa === undefined) this.qnhFt.delete(icao);
     // Pressure altitude reads low when QNH > 1013.25: true altitude ≈ PA + 27 ft/hPa × (QNH − 1013.25).
@@ -51,10 +66,11 @@ export class GroundHeights {
 
   /** Rendered ground height (m) for a runway/airfield at `elevFt`. Starts sampling on first use. */
   private get ellipsoid(): boolean {
-    return this.layer === 'offline' || this.layer === 'satellite';
+    return !this.flatAirports && (this.layer === 'offline' || this.layer === 'satellite');
   }
 
   groundM(airport: Airport, elevFt = airport.elevFt): number {
+    if (this.flatAirports) return airport.elevFt * FT_TO_M;
     if (this.ellipsoid) return 0;
     const e = this.entry(airport);
     // Before sampling finishes assume MSL ≈ ellipsoid (off by the geoid undulation, typically < 100 m).
@@ -69,6 +85,7 @@ export class GroundHeights {
 
   /** Force-load tiles around an airport (runway ends + reference point) and sample its ground height. */
   preload(airport: Airport): Promise<void> {
+    if (this.flatAirports) return Promise.resolve();
     return this.entry(airport).pending ?? Promise.resolve();
   }
 
@@ -76,6 +93,10 @@ export class GroundHeights {
   async sampleAt(lat: number, lon: number): Promise<number | undefined> {
     const c = [Cartographic.fromDegrees(lon, lat)];
     try {
+      if (this.flatAirports) {
+        const r = await sampleTerrain(this.viewer.terrainProvider, 13, c);
+        return r[0]?.height;
+      }
       if (this.layer === 'google3d' && this.tileset()) {
         const r = await this.viewer.scene.sampleHeightMostDetailed(c, this.exclude());
         return r[0]?.height;
@@ -92,7 +113,7 @@ export class GroundHeights {
 
   /** True once the airport's ground has been measured on the current layer. */
   isSampled(airport: Airport): boolean {
-    return this.ellipsoid || !!this.cache.get(airport.ident)?.sampled;
+    return this.flatAirports || this.ellipsoid || !!this.cache.get(airport.ident)?.sampled;
   }
 
   private entry(airport: Airport): Entry {

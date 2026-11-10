@@ -1,4 +1,4 @@
-import { Cartesian3, Cartographic, ScreenSpaceEventHandler, ScreenSpaceEventType, ShadowMode, type Viewer, type Cartesian2 } from 'cesium';
+import { Cartesian3, Cartographic, EllipsoidTerrainProvider, ScreenSpaceEventHandler, ScreenSpaceEventType, ShadowMode, type Viewer, type Cartesian2 } from 'cesium';
 import { effect } from '@preact/signals';
 import { createViewer } from './viewer';
 import { BaseLayers } from './baseLayers';
@@ -16,7 +16,8 @@ import { ReplayController } from './replay';
 import { AlertMonitor } from './alertMonitor';
 import { installDataCredits, trackCreditBarHeight } from './credits';
 import { QUALITY, type QualityLevel } from '../config/quality';
-import { photoreal, photorealScope, quality, showLabels, weatherOn } from '../state/settings';
+import { photoreal, photorealScope, quality, showLabels, terrain3d, weatherOn } from '../state/settings';
+import { OpenTerrain } from './openTerrain';
 import { PhotorealScope } from './photorealScope';
 import { env } from '../config/env';
 import { api } from '../api';
@@ -113,7 +114,9 @@ export class SceneController {
       this.airportsLayer.setLayer(s.kind);
       this.airport3d.setLayer(s.kind);
       this.cameras.minGroundFovDeg = s.kind === 'google3d' ? 10 : 34;
+      this.applyTerrain();
     });
+    this.disposers.push(effect(() => (void terrain3d.value, this.applyTerrain())));
 
     // Render height = pressure altitude + a per-airport correction (geoid + terrain model + QNH), so aircraft land on
     // the runway that is actually drawn. On the ground: the rendered airfield surface.
@@ -136,6 +139,7 @@ export class SceneController {
       this.lastFrame = now;
       if (this.aircraft.models) this.aircraft.models.silhouettes = cameraMode.value === 'free' || cameraMode.value === 'orbit' || cameraMode.value === 'chase';
       this.aircraft.update(now);
+      this.airport3d.update();
       const focus = this.focusPoint();
       this.sky.update(now, focus);
       if (!this.cameras.update(now)) {
@@ -224,12 +228,33 @@ export class SceneController {
       this.aircraft.models.maxDistance = q.modelDistanceM;
       this.aircraft.models.shadows = q.shadows;
     }
+    if (this.airport3d.shadows !== q.shadows) {
+      this.airport3d.shadows = q.shadows;
+      this.airport3d.rebuild();
+    }
     const ts = this.baseLayers.googleTileset;
     if (ts) {
       ts.maximumScreenSpaceError = q.tilesSse;
       ts.cacheBytes = q.tilesCacheMB * 1024 * 1024;
     }
     this.sky.configure({ maxClouds: q.clouds, fog: q.fog, effects: weatherOn.value && canUseFeature('weather_effects') });
+  }
+
+  private readonly openTerrain = new OpenTerrain(() => this.phases.airportIndex);
+  private terrainOn = false;
+
+  /**
+   * Real 3D terrain under the satellite map (open elevation tiles, airports flattened). Needs the airport index
+   * (for flattening), so it switches on once that has loaded.
+   */
+  private applyTerrain() {
+    const want = terrain3d.value && this.baseLayers.current.kind === 'satellite' && !!this.phases.airportIndex;
+    if (want === this.terrainOn) return;
+    this.terrainOn = want;
+    this.ground.setFlatAirports(want);
+    if (want) this.viewer.scene.terrainProvider = this.openTerrain.create();
+    else if (this.baseLayers.current.kind === 'satellite') this.viewer.scene.terrainProvider = new EllipsoidTerrainProvider();
+    this.airport3d.rebuild();
   }
 
   private onPhase(hex: string, _prev: FlightPhase | undefined, next: FlightPhase) {
@@ -319,6 +344,7 @@ export class SceneController {
       this.airportsLayer.setAirports(a);
       this.airport3d.setAirports(a);
       this.scope.setAirports(a);
+      this.applyTerrain();
     });
     this.weatherTimer = setInterval(() => {
       void this.weather.check(this.focusPoint(), weatherOn.value && canUseFeature('weather_effects'));

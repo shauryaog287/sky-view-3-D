@@ -1,5 +1,5 @@
 import { Sheet } from './Sheet';
-import { analyticsOptOut, photoreal, photorealScope, quality, settingsOpen, showLabels, weatherOn } from '../state/settings';
+import { analyticsOptOut, photoreal, photorealScope, quality, settingsOpen, showLabels, terrain3d, weatherOn } from '../state/settings';
 import { QUALITY, type QualityLevel } from '../config/quality';
 import { useFeature, launchMode } from '../state/entitlements';
 import { baseLayerStatus } from '../state/store';
@@ -77,6 +77,12 @@ export function SettingsSheet() {
           </p>
         </fieldset>
       )}
+      <Toggle
+        label="3D terrain"
+        hint="Real hills, valleys and mountains under the satellite map (open elevation data). Airports are levelled to their runways."
+        checked={terrain3d.value}
+        onChange={(v) => (terrain3d.value = v)}
+      />
       <Toggle
         label="Live weather & clouds"
         hint="Clouds, visibility and haze from METAR / Open-Meteo near the followed flight."

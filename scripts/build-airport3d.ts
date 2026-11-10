@@ -1,89 +1,75 @@
 /**
- * Fetches OpenStreetMap airport features for the curated airports and writes compact 3D scenery files:
- *   public/airports3d/<ICAO>.json   (terminals, hangars, control tower, jet bridges, aprons, taxiways)
+ * Builds the compact 3D scenery files public/airports3d/<ICAO>.json from OpenStreetMap (terminals, hangars, towers,
+ * jet bridges, tanks, masts, stands, runway centrelines, aprons, taxiways, boundary).
  *
- *   npm run data:airport3d                 # all curated airports
- *   npm run data:airport3d -- VIDP VABB    # selected ones
+ *   npm run data:airport3d                      # the curated airports
+ *   npm run data:airport3d -- VIDP VABB         # selected ones
  *   npm run data:airport3d -- --india-intl      # every Indian international airport
  *   npm run data:airport3d -- --india-domestic  # every other Indian airport with airline service
- *   (airports that already have a file are skipped unless --force)
+ *   npm run data:airport3d -- --world-hubs      # major international hubs (shared/worldHubs.ts)
+ *   npm run data:airport3d -- --all             # all of the above
+ *   npm run data:airport3d -- --rebuild         # re-convert everything already downloaded (no network)
  *
- * Data © OpenStreetMap contributors, ODbL 1.0 (attribution shown in the app). Uses public Overpass API instances
- * sequentially with pauses; set OVERPASS_URL to use your own.
+ * Raw OSM data is cached under .cache/osm/ (not committed): an airport is downloaded once and never again unless
+ * --force is given. Sources: Overpass (OVERPASS_URL, comma-separated mirrors) with the main OSM API as fallback for
+ * small bounding-box extracts; `--source api|overpass` forces one. Requests are sequential and rate-limited.
+ * Data © OpenStreetMap contributors, ODbL 1.0 (attribution shown in the app).
  */
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { convertOsm, overpassQuery, type OsmElement } from '../shared/airport3d';
+import { convertOsm } from '../shared/airport3d';
 import { CURATED_PRESETS, presetFor } from '../shared/airportPresets';
 import { airportIndex } from '../shared/airportData';
 import { INDIA_INTERNATIONAL, indiaDomestic } from '../shared/indiaAirports';
+import { WORLD_HUBS } from '../shared/worldHubs';
+import { OsmSource } from './lib/osmSource';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = join(root, 'public', 'airports3d');
+const cacheDir = join(root, '.cache', 'osm');
 const MIRRORS = (process.env.OVERPASS_URL ?? 'https://maps.mail.ru/osm/tools/overpass/api/interpreter,https://overpass-api.de/api/interpreter').split(',');
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-/** Public Overpass servers are often overloaded (502/503/504): try every mirror, three rounds with growing pauses. */
-async function fetchOsm(icao: string): Promise<OsmElement[]> {
-  let lastErr: unknown;
-  for (let round = 0; round < 3; round++) {
-    if (round) await sleep(20_000 * round);
-    try {
-      return await fetchOnce(icao);
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  throw lastErr;
-}
-
-async function fetchOnce(icao: string): Promise<OsmElement[]> {
-  const body = new URLSearchParams({ data: overpassQuery(icao) });
-  let lastErr: unknown;
-  for (const url of MIRRORS) {
-    try {
-      const res = await fetch(url, { method: 'POST', body, headers: { 'User-Agent': 'SkyView3D-build/0.1' }, signal: AbortSignal.timeout(120_000) });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const j = (await res.json()) as { elements: OsmElement[] };
-      return j.elements;
-    } catch (e) {
-      lastErr = e;
-      console.warn(`  ${url}: ${(e as Error).message}`);
-    }
-  }
-  throw lastErr;
-}
 
 const args = process.argv.slice(2);
-const wanted = args.filter((a) => /^[A-Z0-9]{4}$/i.test(a)).map((a) => a.toUpperCase());
+const flag = (f: string) => args.includes(f);
+const sourceArg = args[args.indexOf('--source') + 1];
+const source = new OsmSource(cacheDir, MIRRORS, flag('--source') && (sourceArg === 'api' || sourceArg === 'overpass') ? sourceArg : 'auto');
 const airports = airportIndex();
-if (args.includes('--india-intl')) wanted.push(...INDIA_INTERNATIONAL);
-if (args.includes('--india-domestic')) wanted.push(...indiaDomestic(airports).map((a) => a.ident));
+const wanted = args.filter((a) => /^[A-Z0-9]{4}$/i.test(a)).map((a) => a.toUpperCase());
+if (flag('--india-intl') || flag('--all')) wanted.push(...INDIA_INTERNATIONAL);
+if (flag('--india-domestic') || flag('--all')) wanted.push(...indiaDomestic(airports).map((a) => a.ident));
+if (flag('--world-hubs') || flag('--all')) wanted.push(...WORLD_HUBS);
+if (flag('--rebuild')) {
+  mkdirSync(cacheDir, { recursive: true });
+  wanted.push(...readdirSync(cacheDir).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)));
+}
 const list = wanted.length ? [...new Set(wanted)] : Object.keys(CURATED_PRESETS);
 mkdirSync(outDir, { recursive: true });
-const force = args.includes('--force');
+
+let ok = 0;
+let failed = 0;
+let bytes = 0;
 for (const icao of list) {
-  if (!force && !wanted.length) {
-    /* curated default run: always refresh */
-  } else if (!force && existsSync(join(outDir, `${icao}.json`))) {
-    console.log(`${icao}: already built (use --force to refresh)`);
-    continue;
-  }
   const ap = airports.get(icao);
   if (!ap) {
     console.warn(`${icao}: not in airports dataset`);
     continue;
   }
+  if (flag('--rebuild') && !source.cached(icao)) continue;
   try {
-    const elements = await fetchOsm(icao);
+    const { elements, source: from } = await source.get(ap, flag('--force'));
     const curated = CURATED_PRESETS[icao] ? presetFor(icao).towerHeightM : undefined;
     const a = convertOsm(icao, [ap.lat, ap.lon], elements, undefined, { towerHeightM: curated });
     const json = JSON.stringify(a);
     writeFileSync(join(outDir, `${icao}.json`), json);
-    console.log(`${icao}: ${a.buildings.length} buildings, ${a.bridges.length} jet bridges, ${a.towers.length} towers, ${a.taxiways.length} taxiways — ${(json.length / 1024).toFixed(0)} KiB`);
+    bytes += json.length;
+    ok++;
+    console.log(
+      `${icao} ${(ap.iata ?? '').padEnd(3)} [${from}] ${a.buildings.length} bld, ${a.bridges.length} bridges, ${a.towers.length} twr, ${a.taxiways.length} twy, ${a.runways?.length ?? 0} rwy, ${(a.stands?.length ?? 0) / 2} stands, ${a.tanks?.length ?? 0} tanks, ${a.masts?.length ?? 0} masts${a.boundary ? '' : ', no boundary'} — ${(json.length / 1024).toFixed(0)} KiB`,
+    );
   } catch (e) {
+    failed++;
     console.error(`${icao}: failed (${(e as Error).message})`);
   }
-  await sleep(4000);
 }
+console.log(`\n${ok} airports written (${(bytes / 1024 / 1024).toFixed(1)} MiB)${failed ? `, ${failed} failed` : ''}`);

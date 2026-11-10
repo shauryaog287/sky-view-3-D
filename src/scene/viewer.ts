@@ -10,6 +10,7 @@ import {
 } from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { env } from '../config/env';
+import { sceneNowMs, sceneTimeOffsetMs } from './sceneTime';
 
 export interface CreateViewerOptions {
   container: HTMLElement;
@@ -60,12 +61,19 @@ export function createViewer({ container }: CreateViewerOptions): Viewer {
 
   const { scene, clock } = viewer;
   // Real time: the sun position (and therefore lighting) follows the wall clock.
-  clock.currentTime = JulianDate.now();
-  clock.clockStep = ClockStep.SYSTEM_CLOCK;
+  clock.currentTime = JulianDate.fromDate(new Date(sceneNowMs()));
+  clock.clockStep = sceneTimeOffsetMs ? ClockStep.SYSTEM_CLOCK_MULTIPLIER : ClockStep.SYSTEM_CLOCK;
   clock.shouldAnimate = true;
 
   scene.globe.baseColor = Color.fromCssColorString('#0b1a2a');
   scene.globe.enableLighting = true;
+  // Day/night shading at every camera distance (by default Cesium only darkens the night side seen from orbit), so
+  // dusk and night are real near the ground too: dark terrain, lit airfields, city lights from altitude.
+  scene.globe.lightingFadeOutDistance = 1;
+  scene.globe.lightingFadeInDistance = 2;
+  // …but never swap the night-side ground for plain atmosphere colour (that would hide the city lights).
+  scene.globe.nightFadeOutDistance = 1e12;
+  scene.globe.nightFadeInDistance = 2e12;
   scene.globe.depthTestAgainstTerrain = true;
   scene.backgroundColor = Color.BLACK;
   scene.highDynamicRange = false;

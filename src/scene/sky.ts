@@ -1,3 +1,4 @@
+import { sceneNowMs } from './sceneTime';
 import {
   Cartesian2,
   Cartesian3,
@@ -138,7 +139,7 @@ export class SkyController {
     const cam = this.viewer.camera.positionCartographic;
     if (now - this.lastTone > 1000) {
       this.lastTone = now;
-      const elev = solarElevationDeg(CesiumMath.toDegrees(cam.latitude), CesiumMath.toDegrees(cam.longitude), Date.now());
+      const elev = solarElevationDeg(CesiumMath.toDegrees(cam.latitude), CesiumMath.toDegrees(cam.longitude), sceneNowMs());
       const tone = skyTone(elev);
       this.brightness = tone.brightness;
       this.base.setTileTone(tone.brightness, tone.tint);

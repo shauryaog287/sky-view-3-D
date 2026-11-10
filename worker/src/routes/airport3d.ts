@@ -22,7 +22,7 @@ export function registerAirport3dRoutes(r: Router<Ctx>) {
     if (!ap) throw new HttpError(404, 'unknown_airport');
     const urls = listVar(ctx.env.OVERPASS_URLS, DEFAULT_OVERPASS);
     const data = await cached<Airport3D>(
-      `a3d:v1:${ap.ident}`,
+      `a3d:v2:${ap.ident}`,
       7 * 86_400,
       async () => {
         for (const url of urls) {

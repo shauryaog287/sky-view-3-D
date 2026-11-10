@@ -12,3 +12,5 @@
 | `public/airports3d/*.json` + on-demand `/api/airport3d` (airport buildings, jet bridges, towers, aprons, taxiways) | OpenStreetMap via Overpass API | ODbL 1.0 | Yes: "© OpenStreetMap contributors" (shown in the credit bar when loaded) |
 | Satellite imagery layer | Esri World Imagery (streamed, not stored) | Esri terms of use — free for non-commercial use; commercial use needs an ArcGIS Location Platform key | Yes — credit bar |
 | Weather (Open-Meteo, NOAA AWC) | Fetched at runtime by the Worker | CC BY 4.0 / public domain | Open-Meteo: yes (credit bar + Data sources page) |
+| Terrain elevation (streamed, not stored) | Tilezen "Terrain Tiles" on AWS Open Data (Mapzen Joerd: SRTM, GMTED2010, ETOPO1 and national sources) | Open data — see https://github.com/tilezen/joerd/blob/master/docs/attribution.md | Yes — "Terrain: Tilezen Terrain Tiles…" in the credit bar |
+| Night city lights (streamed, not stored) | NASA Earth Observatory / GIBS, VIIRS City Lights 2012 | Public domain (NASA) | Credit requested — shown in the credit bar |
