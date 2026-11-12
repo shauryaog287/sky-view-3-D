@@ -4,7 +4,7 @@ import { modelClassFor } from './aircraftTypes';
 
 describe('aircraft model selection', () => {
   it('prefers an imported model of the type, which must be paintable and credited', () => {
-    for (const [type, cls] of [['A320', 'narrowbody'], ['B38M', 'narrowbody'], ['B789', 'widebody']] as const) {
+    for (const [type, cls] of [['A320', 'narrowbody'], ['A20N', 'narrowbody'], ['A21N', 'narrowbody'], ['A321', 'narrowbody'], ['B738', 'narrowbody'], ['B38M', 'narrowbody'], ['B789', 'widebody'], ['A388', 'widebody'], ['AT76', 'turboprop'], ['DH8D', 'turboprop'], ['CRJ2', 'regional']] as const) {
       const e = modelEntry(modelIdFor(type, cls));
       expect(e.source).toBe('licensed');
       expect(e.livery && e.paintAttr && e.gear).toBe(true);
@@ -13,13 +13,13 @@ describe('aircraft model selection', () => {
     }
   });
   it('picks the model of the exact ICAO type', () => {
-    expect(modelIdFor('A20N', 'narrowbody')).toBe('a20n');
-    expect(modelIdFor('a321', 'narrowbody')).toBe('a321');
+    expect(modelIdFor('A19N', 'narrowbody')).toBe('a19n');
+    expect(modelIdFor('a319', 'narrowbody')).toBe('a319');
     expect(modelIdFor('B77W', 'widebody')).toBe('b77w');
     expect(modelIdFor('B788', 'widebody')).toBe('b788');
-    expect(modelIdFor('A388', 'widebody')).toBe('a388');
+    expect(modelIdFor('A359', 'widebody')).toBe('a359');
     expect(modelIdFor('B744', 'widebody')).toBe('b744');
-    expect(modelIdFor('AT76', 'turboprop')).toBe('at76');
+    expect(modelIdFor('AT45', 'turboprop')).toBe('at45');
     expect(modelIdFor('B39M', 'narrowbody')).toBe('b39m');
   });
 

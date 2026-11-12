@@ -2070,7 +2070,7 @@
   },
   "a320-dl": {
    "file": "licensed/a320-dl.glb",
-   "rev": "dbd66b4cac",
+   "rev": "9051cb04e8",
    "name": "White Airbus A320-200",
    "cls": "narrowbody",
    "length": 37.57,
@@ -2113,7 +2113,7 @@
   },
   "b38m-dl": {
    "file": "licensed/b38m-dl.glb",
-   "rev": "d99575d401",
+   "rev": "f73a0acb5a",
    "name": "737 Max-8 (Free)",
    "cls": "narrowbody",
    "length": 39.47,
@@ -2156,12 +2156,12 @@
   },
   "b789-dl": {
    "file": "licensed/b789-dl.glb",
-   "rev": "2c34b2ccc1",
+   "rev": "145b3e3248",
    "name": "Boeing 787-9",
    "cls": "widebody",
    "length": 62.81,
    "span": 59.88,
-   "height": 16.34,
+   "height": 16.31,
    "livery": true,
    "paintAttr": true,
    "gear": true,
@@ -2196,12 +2196,313 @@
    "licence": "CC-BY-4.0",
    "author": "Nobilis 2 (nobilishornet2)",
    "url": "https://sketchfab.com/models/b6711e2e698e4e469675c1154a50b7a3"
+  },
+  "a20n-dl": {
+   "file": "licensed/a20n-dl.glb",
+   "rev": "13580bb542",
+   "name": "Airbus A320-Neo Low poly",
+   "cls": "narrowbody",
+   "length": 37.57,
+   "span": 35.55,
+   "height": 11.78,
+   "livery": true,
+   "paintAttr": true,
+   "gear": true,
+   "lights": {
+    "tip": [
+     -3.88,
+     17.1,
+     4.08
+    ],
+    "tail": [
+     -18.89,
+     0,
+     4.76
+    ],
+    "top": [
+     3.44,
+     0,
+     5.95
+    ],
+    "belly": [
+     1.43,
+     0,
+     1.3
+    ],
+    "land": [
+     4.64,
+     2.47,
+     2.68
+    ]
+   },
+   "source": "licensed",
+   "licence": "CC-BY-4.0",
+   "author": "dursoalfio",
+   "url": "https://sketchfab.com/models/193cb2025be2455f83d1c73741c7f2ac"
+  },
+  "a321-dl": {
+   "file": "licensed/a321-dl.glb",
+   "rev": "26cc9ee25f",
+   "name": "Generic Airbus A321",
+   "cls": "narrowbody",
+   "length": 44.51,
+   "span": 34.83,
+   "height": 12.14,
+   "livery": true,
+   "paintAttr": true,
+   "gear": true,
+   "lights": {
+    "tip": [
+     -3.54,
+     17.1,
+     4.08
+    ],
+    "tail": [
+     -22.35,
+     0,
+     4.76
+    ],
+    "top": [
+     3.72,
+     0,
+     5.95
+    ],
+    "belly": [
+     1.65,
+     0,
+     1.3
+    ],
+    "land": [
+     4.96,
+     2.47,
+     2.68
+    ]
+   },
+   "source": "licensed",
+   "licence": "CC-BY-4.0",
+   "author": "barengdoc13",
+   "url": "https://sketchfab.com/models/59065f1ccd78433ebe24b5005eface73"
+  },
+  "b738-dl": {
+   "file": "licensed/b738-dl.glb",
+   "rev": "8bc61af773",
+   "name": "B737-800 Blank Livery",
+   "cls": "narrowbody",
+   "length": 39.47,
+   "span": 35.84,
+   "height": 12.66,
+   "livery": true,
+   "paintAttr": true,
+   "gear": true,
+   "lights": {
+    "tip": [
+     -4.18,
+     17.2,
+     3.79
+    ],
+    "tail": [
+     -19.83,
+     0,
+     4.12
+    ],
+    "top": [
+     3.07,
+     0,
+     5.27
+    ],
+    "belly": [
+     1.21,
+     0,
+     0.75
+    ],
+    "land": [
+     4.19,
+     2.35,
+     2.13
+    ]
+   },
+   "source": "licensed",
+   "licence": "CC-BY-4.0",
+   "author": "someone353",
+   "url": "https://sketchfab.com/models/1ba5534c77c746028e64cc80c07149bc"
+  },
+  "a388-dl": {
+   "file": "licensed/a388-dl.glb",
+   "rev": "2c45c1826e",
+   "name": "Airbus A380 - 800",
+   "cls": "widebody",
+   "length": 72.72,
+   "span": 79.05,
+   "height": 22.93,
+   "livery": true,
+   "paintAttr": true,
+   "gear": true,
+   "lights": {
+    "tip": [
+     -16.76,
+     39.92,
+     8.16
+    ],
+    "tail": [
+     -36.46,
+     0,
+     8.28
+    ],
+    "top": [
+     7.08,
+     0,
+     10.98
+    ],
+    "belly": [
+     1.8,
+     0,
+     2.05
+    ],
+    "land": [
+     10.25,
+     4.46,
+     4.59
+    ]
+   },
+   "source": "licensed",
+   "licence": "CC-BY-4.0",
+   "author": "Nobilis 2 (nobilishornet2)",
+   "url": "https://sketchfab.com/models/cfd1092a207b4085a32fbb89c6b32f25"
+  },
+  "at76-dl": {
+   "file": "licensed/at76-dl.glb",
+   "rev": "71ad377fac",
+   "name": "Atr_72_-_600 Domestic Airlines",
+   "cls": "turboprop",
+   "length": 27.17,
+   "span": 26.84,
+   "height": 7.61,
+   "livery": true,
+   "paintAttr": true,
+   "gear": true,
+   "lights": {
+    "tip": [
+     0.77,
+     13.58,
+     4.15
+    ],
+    "tail": [
+     -13.68,
+     0,
+     3.1
+    ],
+    "top": [
+     1.12,
+     0,
+     4.06
+    ],
+    "belly": [
+     0.34,
+     0,
+     0.7
+    ],
+    "land": [
+     1.59,
+     1.79,
+     3.64
+    ]
+   },
+   "source": "licensed",
+   "licence": "CC-BY-4.0",
+   "author": "Ahmed Mahdi (mhmdshwatahmdmhdy922)",
+   "url": "https://sketchfab.com/models/7d5fc744e3fd49eb8cd3cafdab1733e5"
+  },
+  "dh8d-dl": {
+   "file": "licensed/dh8d-dl.glb",
+   "rev": "cb3ae9f576",
+   "name": "Bombardier Dash 8-Q400",
+   "cls": "turboprop",
+   "length": 32.83,
+   "span": 28.36,
+   "height": 8.22,
+   "livery": true,
+   "paintAttr": true,
+   "gear": true,
+   "lights": {
+    "tip": [
+     2.48,
+     14.26,
+     4.45
+    ],
+    "tail": [
+     -16.51,
+     0,
+     3.28
+    ],
+    "top": [
+     2.71,
+     0,
+     4.2
+    ],
+    "belly": [
+     1.81,
+     0,
+     1
+    ],
+    "land": [
+     3.25,
+     1.69,
+     3.81
+    ]
+   },
+   "source": "licensed",
+   "licence": "CC-BY-4.0",
+   "author": "car66254",
+   "url": "https://sketchfab.com/models/5fd537e678d746778586fb73989988a0"
+  },
+  "crj2-dl": {
+   "file": "licensed/crj2-dl.glb",
+   "rev": "f54744fc6e",
+   "name": "Bombardier Crj 200",
+   "cls": "regional",
+   "length": 26.77,
+   "span": 19.67,
+   "height": 6.29,
+   "livery": true,
+   "paintAttr": true,
+   "gear": true,
+   "lights": {
+    "tip": [
+     -4.63,
+     10.66,
+     2.48
+    ],
+    "tail": [
+     -13.48,
+     0,
+     3.04
+    ],
+    "top": [
+     0.05,
+     0,
+     3.9
+    ],
+    "belly": [
+     -1.24,
+     0,
+     0.7
+    ],
+    "land": [
+     0.82,
+     1.69,
+     1.68
+    ]
+   },
+   "source": "licensed",
+   "licence": "CC-BY-4.0",
+   "author": "car66254",
+   "url": "https://sketchfab.com/models/7ea780658c814d6e89914ca7355b6718"
   }
  },
  "types": {
   "A19N": "a19n",
-  "A20N": "a20n",
-  "A21N": "a21n",
+  "A20N": "a20n-dl",
+  "A21N": "a321-dl",
   "A221": "bcs1",
   "A223": "bcs3",
   "A306": "a332",
@@ -2210,7 +2511,7 @@
   "A318": "a319",
   "A319": "a319",
   "A320": "a320-dl",
-  "A321": "a321",
+  "A321": "a321-dl",
   "A332": "a332",
   "A333": "a333",
   "A337": "a333",
@@ -2222,16 +2523,16 @@
   "A346": "a346",
   "A359": "a359",
   "A35K": "a35k",
-  "A388": "a388",
+  "A388": "a388-dl",
   "ARJ21": "crj9",
   "AT43": "at45",
   "AT44": "at45",
   "AT45": "at45",
   "AT46": "at45",
-  "AT72": "at76",
-  "AT73": "at76",
-  "AT75": "at76",
-  "AT76": "at76",
+  "AT72": "at76-dl",
+  "AT73": "at76-dl",
+  "AT75": "at76-dl",
+  "AT76": "at76-dl",
   "B190": "be20",
   "B37M": "b37m",
   "B38M": "b38m-dl",
@@ -2245,7 +2546,7 @@
   "B735": "b737",
   "B736": "b737",
   "B737": "b737",
-  "B738": "b738",
+  "B738": "b738-dl",
   "B739": "b739",
   "B741": "b744",
   "B742": "b744",
@@ -2310,8 +2611,8 @@
   "CL35": "bizm",
   "CL60": "bizh",
   "CN35": "at45",
-  "CRJ1": "crj2",
-  "CRJ2": "crj2",
+  "CRJ1": "crj2-dl",
+  "CRJ2": "crj2-dl",
   "CRJ7": "crj7",
   "CRJ9": "crj9",
   "CRJX": "crj9",
@@ -2325,7 +2626,7 @@
   "DH8A": "dh8d",
   "DH8B": "dh8d",
   "DH8C": "dh8d",
-  "DH8D": "dh8d",
+  "DH8D": "dh8d-dl",
   "DHC6": "be20",
   "E135": "e145",
   "E145": "e145",
@@ -2404,7 +2705,7 @@
   "PC6T": "pc12",
   "PIVI": "pa28",
   "PRM1": "bizl",
-  "Q400": "dh8d",
+  "Q400": "dh8d-dl",
   "SB20": "be20",
   "SF34": "at45",
   "SF50": "bizl",

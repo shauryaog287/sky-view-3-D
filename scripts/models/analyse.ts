@@ -102,8 +102,9 @@ export interface MeshZones {
 
 export interface Analysis {
   meshes: MeshZones[];
-  /** Fuselage radius, centreline height and crown height, m. */
+  /** Fuselage half-width, half-height, centreline height and crown height, m. */
   radius: number;
+  halfH: number;
   axisY: number;
   topY: number;
   length: number;
@@ -134,6 +135,8 @@ export function analyse(meshes: MeshIn[]): Analysis {
   const z0 = all.min[2];
 
   // Fuselage cross-section just behind the cockpit, where nothing else is attached.
+  // Fuselages are often taller than wide, so width and height are measured separately. The keel is read off to the
+  // side of the centreline, clear of the nose gear.
   const xs: number[] = [];
   const ys: number[] = [];
   for (const m of meshes) {
@@ -146,8 +149,18 @@ export function analyse(meshes: MeshIn[]): Analysis {
     }
   }
   const radius = percentile(xs, 0.99) || span * 0.055;
-  const topY = percentile(ys, 0.99) || height * 0.45;
-  const axisY = topY - radius;
+  const topY = percentile(ys, 0.999) || height * 0.45;
+  const low: number[] = [];
+  for (const m of meshes) {
+    for (let i = 0; i < m.pos.length; i += 3) {
+      const t = (m.pos[i + 2] - z0) / length;
+      const ax = Math.abs(m.pos[i]);
+      if (t > 0.78 && t < 0.88 && ax > 0.25 * radius && ax < 0.6 * radius) low.push(m.pos[i + 1]);
+    }
+  }
+  // Half-height, kept within sane bounds of the half-width in case the section is cluttered.
+  const halfH = Math.min(1.35 * radius, Math.max(0.85 * radius, low.length ? (topY - percentile(low, 0.01)) / 2 / 0.985 : radius));
+  const axisY = topY - halfH;
 
   // Connected components (vertices welded by position across meshes): separate parts such as cowls and wheels.
   const key = new Map<string, number>();
@@ -219,8 +232,18 @@ export function analyse(meshes: MeshIn[]): Analysis {
   const kind = new Map<number, 'engine' | 'gear' | ''>();
   for (const [c, b] of boxes) {
     if (nacelleZones.some((n) => within(b, n))) kind.set(c, 'engine');
-    else if (b.min[1] < 0.2 * radius && b.max[1] < axisY - 0.45 * radius && b.max[0] - b.min[0] < 0.25 * span) kind.set(c, 'gear');
-    else kind.set(c, '');
+    else {
+      // Landing gear: parts that reach the ground and stay below the fuselage axis, and are not bulky bodies
+      // (an undetected engine); or thin struts that reach the ground from a high wing.
+      const dx = b.max[0] - b.min[0];
+      const dy = b.max[1] - b.min[1];
+      const dz = b.max[2] - b.min[2];
+      const ground = b.min[1] < 0.2 * radius;
+      const bulky = dx > 0.55 * radius && dy > 0.55 * radius && dz > 1.2 * radius;
+      const below = b.max[1] < axisY - 0.1 * radius && dx < 0.12 * span && !bulky;
+      const strut = b.max[1] < axisY + radius && dx < 0.5 * radius && dz < 0.9 * radius;
+      kind.set(c, ground && (below || strut) ? 'gear' : '');
+    }
   }
 
   // Wingtip level, to tell winglets (near-vertical surfaces rising above it) from the wing itself.
@@ -262,14 +285,15 @@ export function analyse(meshes: MeshIn[]): Analysis {
       nz /= nl;
       const u = (cz - z0) / length;
       const d = Math.hypot(cx, cy - axisY);
+      const e = Math.hypot(cx / radius, (cy - axisY) / halfH);
       const kinds = [i0, i1, i2].map((i) => kind.get(find(ids[mi][i])));
       let zn: number = ZONE.NONE;
       if (kinds.every((k) => k === 'gear')) {
         gearTri[t] = 1;
         counts.gearTris++;
       } else if (kinds.every((k) => k === 'engine')) zn = ZONE.ENGINE;
-      else if (Math.abs(cx) < 0.45 * radius && cy > axisY + 1.02 * radius && u < 0.36) zn = ZONE.TAIL;
-      else if (d <= 1.07 * radius) {
+      else if (Math.abs(cx) < 0.45 * radius && cy > axisY + 1.02 * halfH && u < 0.36) zn = ZONE.TAIL;
+      else if (e <= 1.07) {
         // Fuselage skin faces outwards from the axis (or along it, at the nose and tail tips); wing and tailplane
         // roots inside the cylinder face up and down instead.
         const radial = d > 1e-6 ? Math.abs((nx * cx + ny * (cy - axisY)) / d) : 1;
@@ -293,7 +317,7 @@ export function analyse(meshes: MeshIn[]): Analysis {
           if (zn === ZONE.TAIL && Math.abs(P(i, 0)) < radius) h = (y - topY) / Math.max(finTop - topY, 0.1);
           // Height relative to the fuselage axis of the constant section. The drooped nose and the upswept tail are
           // deliberately not followed: a belly colour then ends in a clean waterline, as on real aircraft.
-          else if (zn === ZONE.FUSELAGE) h = (y - axisY) / radius;
+          else if (zn === ZONE.FUSELAGE) h = (y - axisY) / halfH;
           paint.push(uu, Math.min(1, Math.max(zn === ZONE.TAIL ? 0 : -1, h)));
         }
         idx[t * 3 + c] = o;
@@ -301,5 +325,5 @@ export function analyse(meshes: MeshIn[]): Analysis {
     }
     return { src: Uint32Array.from(src), idx, zone: Float32Array.from(zone), paint: Float32Array.from(paint), gearTri };
   });
-  return { meshes: out, radius, axisY, topY, length, span, height, counts };
+  return { meshes: out, radius, halfH, axisY, topY, length, span, height, counts };
 }

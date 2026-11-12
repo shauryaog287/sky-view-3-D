@@ -19,6 +19,7 @@
  * --gear: `auto` (default) finds the landing gear (separate parts under the belly that reach the ground) so it
  * retracts in flight; `none` leaves it fixed.
  * --length: real overall length in metres; the model is scaled to it (default: the type's generated model length).
+ * --preview <file.glb>: trial run. Writes the converted model to that file and changes nothing in the app.
  * --gear-node: name of the node holding the landing gear, when the automatic detection misses it (optional).
  *
  * Only .glb / .gltf without Draco compression are supported (re-export with Draco off, or run
@@ -53,6 +54,7 @@ const { values: a } = parseArgs({
     length: { type: 'string' },
     'gear-node': { type: 'string' },
     airlines: { type: 'string' },
+    preview: { type: 'string' },
   },
 });
 const need = ['file', 'id', 'types', 'name', 'licence', 'author', 'url'] as const;
@@ -290,6 +292,18 @@ for (const bf of gltf.listBuffers()) if (bf !== buffer) bf.dispose();
 await doc.transform(dedup(), prune(), meshopt({ encoder: MeshoptEncoder, level: 'medium' }));
 doc.createExtension(EXTMeshoptCompression).setRequired(true);
 const glb = await io.writeBinary(doc);
+const report = () => {
+  const sign = (v: V) => `${v[v.findIndex((x) => x !== 0)] < 0 ? '-' : '+'}${'xyz'[v.findIndex((x) => x !== 0)]}`;
+  console.log(`  axes: forward ${sign(fwd)}, up ${sign(up)}${a.forward ? '' : ' (detected)'}; fuselage radius ${round(an.radius)} m, axis ${round(an.axisY)} m above ground`);
+  console.log(`  paint: ${wantPaint ? `${an.counts.fuselage} fuselage, ${an.counts.tail} fin/winglet, ${an.counts.engine} cowl triangles (${an.counts.nacelles} cowls)` : 'off'}; gear: ${graft ? `none in the model, borrowed from ${generatedBase!.file} (body raised ${round(raise)} m)` : hasGear ? `${gearTris.reduce((s, g) => s + g.reduce((x, y) => x + y, 0), 0)} triangles retract` : 'fixed'}`);
+};
+if (a.preview) {
+  // Trial run: write the converted model somewhere else and leave the app untouched.
+  writeFileSync(a.preview, glb);
+  console.log(`Preview ${a.preview}: ${(glb.length / 1024).toFixed(0)} KiB, ${round(an.length)} m long, ${round(an.span)} m span, ${round(an.height + raise)} m high`);
+  report();
+  process.exit(0);
+}
 const outDir = join(root, 'public', 'models', 'licensed');
 mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, `${a.id}.glb`), glb);
@@ -328,10 +342,8 @@ const marker = `| \`public/models/licensed/${a.id}.glb\` `;
 // Re-importing the same id replaces its row instead of adding a second one.
 if (lic.includes(marker)) writeFileSync(licPath, lic.split('\n').map((l) => (l.startsWith(marker) ? row.trimEnd() : l)).join('\n'));
 else appendFileSync(licPath, row);
-const sign = (v: V) => `${v[v.findIndex((x) => x !== 0)] < 0 ? '-' : '+'}${'xyz'[v.findIndex((x) => x !== 0)]}`;
 console.log(`Imported ${a.id}: ${(glb.length / 1024).toFixed(0)} KiB, ${round(an.length)} m long, ${round(an.span)} m span, ${round(an.height)} m high → ${types.join(', ')}${airlines.length ? ` (${airlines.join(', ')} only)` : ''}`);
-console.log(`  axes: forward ${sign(fwd)}, up ${sign(up)}${a.forward ? '' : ' (detected)'}; fuselage radius ${round(an.radius)} m, axis ${round(an.axisY)} m above ground`);
-console.log(`  paint: ${wantPaint ? `${an.counts.fuselage} fuselage, ${an.counts.tail} fin/winglet, ${an.counts.engine} cowl triangles (${an.counts.nacelles} cowls)` : 'off'}; gear: ${graft ? `none in the model, borrowed from ${generatedBase!.file} (body raised ${round(raise)} m)` : hasGear ? `${gearTris.reduce((s, g) => s + g.reduce((x, y) => x + y, 0), 0)} triangles retract` : 'fixed'}`);
+report();
 console.log('Now add the author credit to public/legal/sources.html (CC-BY requires it) and check the model with `npm run dev`.');
 
 function round(n: number) {

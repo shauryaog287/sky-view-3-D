@@ -17,7 +17,7 @@ Legend: ✅ done · 🔄 in progress · ⏳ not started · ⛔ blocked (see NEED
 | 3D airports, 2D city | ✅ | Google 3D tiles clipped to airport outlines, flat 2D satellite map elsewhere (default; "Everywhere" in Settings). Verified with a stand-in tileset (no Google key yet) (D-031) |
 | Runway assignment + India-first rollout | ✅ | Runway in use learned live (lined up → traffic → wind → geometry), shown in the info panel and used by runway/tower cams; Indian international airports' 3D scenery shipped; airline-specific replica slots (D-030, docs/india-rollout.md) |
 | Per-type aircraft models | ✅ | 53 generated models / 218 ICAO types, airline tail colours, gear retracts in flight; import script for licensed photoreal models (D-029) |
-| Downloaded airframes | ✅ | A320, 737 MAX 8, 787-9 use CC-BY Sketchfab models; the import tool detects orientation, paint zones and landing gear from the shape, so they take airline colours and retract gear (the 787 borrows generated gear). Other types stay generated (D-033) |
+| Downloaded airframes | ✅ | A320, A320neo, A321/A321neo, 737-800, 737 MAX 8, 787-9, A380, ATR 72, Q400, CRJ200 use CC-BY Sketchfab models; the import tool detects orientation, paint zones and landing gear from the shape, so they take airline colours and retract gear (787 and A380 borrow generated gear). Other types stay generated (D-033) |
 
 ## Test status (last run)
 - `npm run typecheck` — clean (web, worker, scripts).
