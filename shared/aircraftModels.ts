@@ -18,6 +18,8 @@ export interface ModelEntry {
   height: number;
   /** Has the `_LIVERY` vertex attribute (tail/winglets painted in the operator's colour). */
   livery: boolean;
+  /** Imported model: paint zones come with a `_PAINT` attribute (position along and around the fuselage) instead of texture coordinates. */
+  paintAttr?: boolean;
   /** Has a retractable "gear" node. */
   gear: boolean;
   /** Light positions in the model frame, [forward, left, up] metres (left-side lights are mirrored). */

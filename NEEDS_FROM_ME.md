@@ -173,6 +173,8 @@ replicas need artist-made 3D models. I can't make those, and the realistic ones 
    - *Buy ready-made*: CGTrader / TurboSquid. Use the "Royalty Free" licence only. Models with real logos are usually
      sold as **editorial use only**, which does not cover an app.
    - *Free*: Sketchfab models under **CC BY** or **CC0** (not NC/ND). Quality and coverage are hit-and-miss.
+     Done so far (D-033): A320, 737 MAX 8, 787-9. **Regenerate your Sketchfab API token** (Sketchfab → Settings →
+     Password & API → "Regenerate"): it was pasted into the chat for these downloads. It is not stored in the repo.
      Credit is required. If you want me to search and download, create a free Sketchfab account and give me an API
      token (Sketchfab → Settings → Password & API → API token) as a secret. Or download the files yourself and send
      them to me.

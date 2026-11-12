@@ -10,7 +10,7 @@ interface Slot {
   model: Model;
   id: string;
   ready: boolean;
-  /** Per-model livery shader (generated models only). */
+  /** Per-model livery shader (models with paint zones). */
   shader?: CustomShader;
   livery?: string;
   gearShown?: boolean;
@@ -20,37 +20,41 @@ const SELECT_COLOR = Color.fromCssColorString('#39d0ff');
 const OFF = new Cartesian4(1, 1, 1, 0);
 
 /**
- * Airline paint for the generated models (shared/liveries.ts). The models mark paint zones in the `_LIVERY` vertex
- * attribute (1 = fin and winglets, 0.5 = nacelles, 0.25 = fuselage); on the fuselage the texture coordinates give the
- * position along (u: tail → nose) and around (v) the body, so belly, cheatline and rear sweep are placed in the
- * shader while windows and door seams from the texture stay visible. Colours only — no logos.
+ * Airline paint (shared/liveries.ts). Models mark paint zones in the `_LIVERY` vertex attribute (1 = fin and
+ * winglets, 0.5 = nacelles, 0.25 = fuselage). On the fuselage the shader needs the position along (tail → nose) and
+ * the height on the body (+1 crown, 0 widest point, −1 keel) to place belly, cheatline and rear sweep while windows
+ * and door seams stay visible. Generated models encode that in their texture coordinates; imported models
+ * (`paintAttr`) carry it in a `_PAINT` attribute written by the import tool, because their texture coordinates
+ * belong to the author's own textures. Colours only, no logos.
  * One shader instance per pooled model; Cesium shares the compiled program.
  */
-function liveryShader(): CustomShader {
+function liveryShader(paintAttr: boolean): CustomShader {
   const v4 = () => ({ type: UniformType.VEC4, value: Cartesian4.clone(OFF) });
+  // along: 0 tail … 1 nose. h: fuselage height −1 … +1. band: 0 … 1 up the fin (1 on generated winglets).
+  const coords = paintAttr
+    ? 'vec2 p = fsInput.attributes.paint; float along = p.x; float h = p.y; float band = p.y;'
+    : 'vec2 p = fsInput.attributes.texCoord_0; float along = p.x; float h = sin(p.y * 6.2831853); float band = p.y;';
   return new CustomShader({
     uniforms: { u_tail: v4(), u_tail2: v4(), u_body: v4(), u_belly: v4(), u_cheat: v4(), u_sweep: v4(), u_engine: v4() },
     fragmentShaderText: `
       void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
         float zone = fsInput.attributes.livery;
-        vec2 uv = fsInput.attributes.texCoord_0;
+        ${coords}
         vec3 d = material.diffuse;
+        // Painted skin is bright; windows, windscreen, seams and intakes are dark and keep their colour.
+        float lum = clamp(dot(d, vec3(0.3333)) / 0.88, 0.0, 1.0);
+        float skin = smoothstep(0.3, 0.62, lum);
         if (zone > 0.75) {
-          vec3 c = mix(u_tail.rgb, u_tail2.rgb, u_tail2.a * step(0.62, uv.y));
-          d = mix(d, c, u_tail.a);
+          vec3 c = mix(u_tail.rgb, u_tail2.rgb, u_tail2.a * step(0.62, band));
+          d = mix(d, c, u_tail.a${paintAttr ? ' * skin' : ''});
         } else if (zone > 0.38) {
-          d = mix(d, u_engine.rgb, u_engine.a);
+          d = mix(d, u_engine.rgb, u_engine.a${paintAttr ? ' * skin' : ''});
         } else if (zone > 0.15) {
-          // Height on the fuselage side: +1 crown, 0 widest point, -1 keel.
-          float h = sin(uv.y * 6.2831853);
-          // Painted skin is bright in the texture; windows, windscreen and seams are dark and keep their colour.
-          float lum = clamp(dot(d, vec3(0.3333)) / 0.88, 0.0, 1.0);
-          float skin = smoothstep(0.3, 0.62, lum);
           d = mix(d, d * u_body.rgb, u_body.a);
           d = mix(d, u_belly.rgb * lum, u_belly.a * skin * (1.0 - smoothstep(-0.5, -0.42, h)));
-          d = mix(d, u_cheat.rgb, u_cheat.a * skin * step(-0.2, h) * step(h, -0.1) * step(0.13, uv.x) * step(uv.x, 0.9));
+          d = mix(d, u_cheat.rgb, u_cheat.a * skin * step(-0.2, h) * step(h, -0.1) * step(0.13, along) * step(along, 0.9));
           float edge = u_sweep.a * (0.55 + 0.45 * h);
-          d = mix(d, u_sweep.rgb * lum, skin * step(uv.x, edge) * step(0.001, u_sweep.a));
+          d = mix(d, u_sweep.rgb * lum, skin * step(along, edge) * step(0.001, u_sweep.a));
         }
         material.diffuse = d;
       }`,
@@ -143,7 +147,7 @@ export class ModelPool {
     return shown;
   }
 
-  /** Airline paint scheme on generated models. Imported models keep their own textures untouched. */
+  /** Airline paint scheme. Models without paint zones (airline replicas) keep their own colours. */
   private paint(slot: Slot, f: FrameAircraft) {
     if (!slot.shader) return;
     const icao = airlineFromCallsign(f.a.state.callsign)?.icao;
@@ -186,7 +190,7 @@ export class ModelPool {
     this.pending.set(id, (this.pending.get(id) ?? 0) + 1);
     this.creating++;
     const entry = modelEntry(id);
-    const shader = entry.livery ? liveryShader() : undefined;
+    const shader = entry.livery ? liveryShader(!!entry.paintAttr) : undefined;
     Model.fromGltfAsync({
       url: modelUrl(entry),
       minimumPixelSize: 28,

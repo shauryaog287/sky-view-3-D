@@ -3,15 +3,24 @@ import { modelEntry, modelIdFor, resolveModel, type ModelManifest } from './airc
 import { modelClassFor } from './aircraftTypes';
 
 describe('aircraft model selection', () => {
+  it('prefers an imported model of the type, which must be paintable and credited', () => {
+    for (const [type, cls] of [['A320', 'narrowbody'], ['B38M', 'narrowbody'], ['B789', 'widebody']] as const) {
+      const e = modelEntry(modelIdFor(type, cls));
+      expect(e.source).toBe('licensed');
+      expect(e.livery && e.paintAttr && e.gear).toBe(true);
+      expect(e.lights).toBeDefined();
+      expect(e.licence && e.author && e.url).toBeTruthy();
+    }
+  });
   it('picks the model of the exact ICAO type', () => {
     expect(modelIdFor('A20N', 'narrowbody')).toBe('a20n');
-    expect(modelIdFor('a320', 'narrowbody')).toBe('a320');
+    expect(modelIdFor('a321', 'narrowbody')).toBe('a321');
     expect(modelIdFor('B77W', 'widebody')).toBe('b77w');
-    expect(modelIdFor('B789', 'widebody')).toBe('b789');
+    expect(modelIdFor('B788', 'widebody')).toBe('b788');
     expect(modelIdFor('A388', 'widebody')).toBe('a388');
     expect(modelIdFor('B744', 'widebody')).toBe('b744');
     expect(modelIdFor('AT76', 'turboprop')).toBe('at76');
-    expect(modelIdFor('B38M', 'narrowbody')).toBe('b38m');
+    expect(modelIdFor('B39M', 'narrowbody')).toBe('b39m');
   });
 
   it('falls back to the class model for unknown types and missing data', () => {

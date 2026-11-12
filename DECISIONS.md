@@ -369,3 +369,19 @@ Short architecture decision records. Newest decisions are appended at the bottom
   one-off; runtime still uses Overpass through the Worker).
 - Not done: animated propellers/gear, contrails, ground vehicles, real per-aircraft liveries (need licensed models),
   3D city buildings (need Google tiles or an OSM-buildings service).
+
+## D-033 · Downloaded airframes with automatic paint zones and landing gear
+- **What:** The A320, 737 MAX 8 and 787-9 now use free CC-BY 4.0 models from Sketchfab (authors credited in
+  ASSETS_LICENSES.md and on the Data sources page) instead of the generated ones. `npm run models:import` was rebuilt
+  so a downloaded model behaves like a generated one: it detects nose and top from the shape, bakes the geometry into
+  the app frame, finds fuselage, fin, winglets and engine cowls (`scripts/models/analyse.ts`) and writes them as paint
+  zones, so the airline colour schemes apply; it separates the landing gear so it retracts, or, when the model has no
+  wheels (the 787), borrows the gear of the generated model of that type and lifts the body to match.
+- **Why:** The user found the generated aircraft unconvincing. Hand-made meshes look better, but plain imports were
+  white for every airline and flew with the gear down, which looked worse in the app than the generated models.
+- **Limits:** Only plain white models are used. Models carrying a manufacturer or airline livery are skipped
+  (trademarks, NEEDS_FROM_ME §16) unless imported as that airline's replica with `--airlines`. A 777 candidate was
+  rejected: wrong proportions. All other types keep the generated models. Zone detection is geometric, so a new
+  model should be checked by eye after import (`--paint none` / `--gear none` turn the automation off).
+- **Token:** The Sketchfab API token was used only for the downloads in one session and is not stored anywhere in
+  the repository. It should be regenerated (NEEDS_FROM_ME §16).

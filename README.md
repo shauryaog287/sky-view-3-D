@@ -51,7 +51,7 @@ npm run dev                                      # frontend on http://localhost:
 | 3D terrain | `src/scene/openTerrain.ts`, `shared/terrainFlatten.ts` | open elevation tiles, airports flattened to field elevation |
 | Airport scenery | `shared/airportMesh.ts`, `shared/airportLights.ts`, `src/scene/airport3dLayer.ts` | procedural architecture + airfield lighting from OpenStreetMap; 256 airports pre-built (`npm run data:airport3d -- --all`) |
 | Airline paint, aircraft lights | `shared/liveries.ts`, `src/scene/modelPool.ts`, `src/scene/aircraftLights.ts` | colour schemes per airline (no logos), strobes, beacons, landing lights |
-| Aircraft models | `scripts/build-models.ts` → `public/models/types/*.glb`, `shared/aircraftModels.json` | one model per ICAO type (53), airline tail colour, retracting gear; `npm run models:import` for licensed photoreal models |
+| Aircraft models | `scripts/build-models.ts` → `public/models/types/*.glb`, `shared/aircraftModels.json` | one model per ICAO type (53), airline paint schemes, retracting gear; `npm run models:import` adds downloaded or bought models (auto-detects orientation, paint zones and landing gear; 3 CC-BY models in `public/models/licensed/`) |
 
 Docs: [PLAN.md](PLAN.md) · [PROGRESS.md](PROGRESS.md) · [DECISIONS.md](DECISIONS.md) ·
 [NEEDS_FROM_ME.md](NEEDS_FROM_ME.md) · [ASSETS_LICENSES.md](ASSETS_LICENSES.md) · [docs/android-twa.md](docs/android-twa.md)

@@ -2067,6 +2067,135 @@
     ]
    },
    "source": "generated"
+  },
+  "a320-dl": {
+   "file": "licensed/a320-dl.glb",
+   "rev": "dbd66b4cac",
+   "name": "White Airbus A320-200",
+   "cls": "narrowbody",
+   "length": 37.57,
+   "span": 34.34,
+   "height": 11.77,
+   "livery": true,
+   "paintAttr": true,
+   "gear": true,
+   "lights": {
+    "tip": [
+     -3.88,
+     17.1,
+     4.08
+    ],
+    "tail": [
+     -18.89,
+     0,
+     4.76
+    ],
+    "top": [
+     3.44,
+     0,
+     5.95
+    ],
+    "belly": [
+     1.43,
+     0,
+     1.3
+    ],
+    "land": [
+     4.64,
+     2.47,
+     2.68
+    ]
+   },
+   "source": "licensed",
+   "licence": "CC-BY-4.0",
+   "author": "Dave Love SketchFab (Tyler_Dave)",
+   "url": "https://sketchfab.com/models/cf7c3f80fced48d18d6409af66579c62"
+  },
+  "b38m-dl": {
+   "file": "licensed/b38m-dl.glb",
+   "rev": "d99575d401",
+   "name": "737 Max-8 (Free)",
+   "cls": "narrowbody",
+   "length": 39.47,
+   "span": 36.52,
+   "height": 12.71,
+   "livery": true,
+   "paintAttr": true,
+   "gear": true,
+   "lights": {
+    "tip": [
+     -4.18,
+     17.2,
+     3.79
+    ],
+    "tail": [
+     -19.83,
+     0,
+     4.12
+    ],
+    "top": [
+     3.07,
+     0,
+     5.27
+    ],
+    "belly": [
+     1.21,
+     0,
+     0.75
+    ],
+    "land": [
+     4.19,
+     2.35,
+     2.13
+    ]
+   },
+   "source": "licensed",
+   "licence": "CC-BY-4.0",
+   "author": "AMPG (AMGP3D)",
+   "url": "https://sketchfab.com/models/197ae72ceb5441efa91b8bdc2ee37050"
+  },
+  "b789-dl": {
+   "file": "licensed/b789-dl.glb",
+   "rev": "2c34b2ccc1",
+   "name": "Boeing 787-9",
+   "cls": "widebody",
+   "length": 62.81,
+   "span": 59.88,
+   "height": 16.34,
+   "livery": true,
+   "paintAttr": true,
+   "gear": true,
+   "lights": {
+    "tip": [
+     -15.64,
+     30.11,
+     7.1
+    ],
+    "tail": [
+     -31.51,
+     0,
+     6.61
+    ],
+    "top": [
+     3.92,
+     0,
+     8.19
+    ],
+    "belly": [
+     0.62,
+     0,
+     1.75
+    ],
+    "land": [
+     5.9,
+     3.61,
+     3.75
+    ]
+   },
+   "source": "licensed",
+   "licence": "CC-BY-4.0",
+   "author": "Nobilis 2 (nobilishornet2)",
+   "url": "https://sketchfab.com/models/b6711e2e698e4e469675c1154a50b7a3"
   }
  },
  "types": {
@@ -2080,7 +2209,7 @@
   "A310": "a332",
   "A318": "a319",
   "A319": "a319",
-  "A320": "a320",
+  "A320": "a320-dl",
   "A321": "a321",
   "A332": "a332",
   "A333": "a333",
@@ -2105,7 +2234,7 @@
   "AT76": "at76",
   "B190": "be20",
   "B37M": "b37m",
-  "B38M": "b38m",
+  "B38M": "b38m-dl",
   "B39M": "b39m",
   "B3XM": "b39m",
   "B712": "b712",
@@ -2136,7 +2265,7 @@
   "B77L": "b77l",
   "B77W": "b77w",
   "B788": "b788",
-  "B789": "b789",
+  "B789": "b789-dl",
   "B78X": "b78x",
   "BCS1": "bcs1",
   "BCS3": "bcs3",
